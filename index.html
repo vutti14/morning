@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FAF7F2">
+<meta name="robots" content="noindex, nofollow">
+<title>Morning</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Sarabun", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif;
+  background: #FAF7F2; color: #1F1B16; line-height: 1.65;
+  min-height: 100vh; font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.8s ease;
+}
+body.storm { background: #EDEEF0; }
+body.locked { overflow: hidden; }
+
+#app { display: none; padding: 32px 20px 100px; max-width: 680px; margin: 0 auto; }
+body.unlocked #app { display: block; }
+
+/* GATE */
+#gate {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #FAF7F2; z-index: 100;
+  padding: 24px; overflow-y: auto;
+}
+body.unlocked #gate { display: none; }
+.gate-card { max-width: 360px; width: 100%; text-align: center; }
+.gate-screen { display: none; }
+.gate-screen.active { display: block; }
+.gate-title { font-family: Georgia, serif; font-size: 34px; font-weight: 400; color: #1F1B16; margin-bottom: 6px; }
+.gate-subtitle { font-size: 12px; color: #8B6F47; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 36px; }
+.gate-prompt { font-family: Georgia, serif; font-size: 16px; color: #3A342D; margin-bottom: 6px; }
+.gate-hint { font-size: 12px; color: #8B6F47; margin-bottom: 24px; line-height: 1.5; }
+.gate-big-btn {
+  display: block; width: 100%; padding: 14px 20px;
+  background: #1F1B16; color: white; border: none; border-radius: 100px;
+  font-family: inherit; font-size: 14px; letter-spacing: 0.08em;
+  cursor: pointer; margin-bottom: 10px; transition: background 0.15s;
+}
+.gate-big-btn:hover { background: #8B6F47; }
+.gate-big-btn.secondary { background: transparent; color: #1F1B16; border: 1px solid #D4C9B8; }
+.gate-big-btn.secondary:hover { background: #F3EEE3; border-color: #8B6F47; }
+.gate-big-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.gate-input {
+  display: block; width: 100%; padding: 12px 16px;
+  background: white; border: 1px solid #D4C9B8; border-radius: 6px;
+  font-family: inherit; font-size: 13px; color: #1F1B16;
+  margin-bottom: 10px; outline: none;
+}
+.gate-input:focus { border-color: #8B6F47; }
+.gate-input::placeholder { color: #B3A690; }
+
+.lock-dots { display: flex; justify-content: center; gap: 14px; margin-bottom: 32px; }
+.lock-dots .dot { width: 14px; height: 14px; border: 1.5px solid #8B6F47; border-radius: 50%; background: white; }
+.lock-dots .dot.filled { background: #8B6F47; }
+.lock-dots.shake { animation: shake 0.4s ease; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); } 40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
+}
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 280px; margin: 0 auto 16px; }
+.np-btn {
+  padding: 0; background: white; border: 1px solid #E8E0D3; border-radius: 50%;
+  font-family: Georgia, serif; font-size: 22px; color: #1F1B16;
+  cursor: pointer; aspect-ratio: 1; user-select: none; transition: all 0.12s ease;
+}
+.np-btn:active { background: #8B6F47; color: white; transform: scale(0.96); }
+.np-btn.ghost { background: transparent; border-color: transparent; font-size: 13px; font-family: inherit; color: #8B6F47; }
+.np-btn.ghost:active { background: #F3EEE3; color: #1F1B16; }
+.gate-status { min-height: 20px; font-size: 12px; color: #8B6F47; letter-spacing: 0.05em; margin-top: 14px; line-height: 1.5; }
+.gate-status.err { color: #B03E2D; }
+.gate-status.ok { color: #4A7A4A; }
+.gate-link { margin-top: 20px; display: inline-block; background: none; border: none; color: #8B6F47; font-family: inherit; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; padding: 6px 12px; }
+.gate-link:hover { color: #1F1B16; text-decoration: underline; }
+.gate-loading { display: inline-block; width: 14px; height: 14px; border: 2px solid #E8E0D3; border-top-color: #8B6F47; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* BANNER */
+.banner { padding: 14px 18px; border-radius: 4px; margin-bottom: 28px; font-size: 13px; line-height: 1.5; display: none; }
+.banner.amber { background: #F5E6D3; color: #6B4423; border-left: 3px solid #B08968; display: block; }
+.banner.dim   { background: #EBE7DE; color: #4A4037; border-left: 3px solid #6B6259; display: block; }
+.banner.storm { background: #DEE3E8; color: #2C3A47; border-left: 3px solid #5A6B7D; display: block; }
+.banner strong { display: block; margin-bottom: 2px; letter-spacing: 0.05em; font-size: 11px; text-transform: uppercase; }
+
+/* HEADER */
+header { text-align: center; padding: 24px 0 40px; border-bottom: 1px solid #E8E0D3; margin-bottom: 48px; position: relative; }
+.date { color: #8B6F47; font-size: 11px; letter-spacing: 0.2em; margin-bottom: 18px; text-transform: uppercase; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-size: 40px; font-weight: 400; margin-bottom: 10px; }
+.subtitle { color: #6B6259; font-size: 14px; font-style: italic; }
+.last-visit { font-size: 11px; color: #8B6F47; margin-top: 14px; letter-spacing: 0.1em; }
+.header-btns { position: absolute; top: 0; right: 0; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.header-btn {
+  background: none; border: 1px solid #D4C9B8; border-radius: 100px;
+  padding: 5px 10px; font-family: inherit; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #8B6F47; cursor: pointer;
+}
+.header-btn:hover { background: #F3EEE3; color: #1F1B16; }
+.header-btn.primary { background: #1F1B16; color: white; border-color: #1F1B16; }
+.header-btn.primary:hover { background: #8B6F47; border-color: #8B6F47; }
+.sync-ind { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+.sync-ind.on { background: #4A7A4A; } .sync-ind.off { background: #B3A690; }
+.sync-ind.busy { background: #B08968; animation: pulse 1s infinite; } .sync-ind.err { background: #B03E2D; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+
+section { margin-bottom: 52px; }
+h2 { font-family: Georgia, serif; font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: #8B6F47; margin-bottom: 18px; font-weight: 600; }
+
+/* DIGEST */
+.digest { background: linear-gradient(135deg, #F5EDE0 0%, #FAF7F2 100%); padding: 28px; border-radius: 4px; border: 1px solid #E8E0D3; border-top: 3px solid #8B6F47; display: none; }
+.digest.show { display: block; }
+.digest-title { font-family: Georgia, serif; font-size: 22px; margin-bottom: 6px; }
+.digest-sub { font-size: 11px; color: #8B6F47; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 20px; }
+.digest-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.digest-stat { background: white; padding: 14px 10px; border-radius: 4px; text-align: center; border: 1px solid #E8E0D3; }
+.digest-num { font-family: Georgia, serif; font-size: 22px; color: #1F1B16; line-height: 1; }
+.digest-lab { font-size: 10px; color: #6B6259; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+.digest-section { padding: 10px 0; border-top: 1px solid #E8E0D3; }
+.digest-h { font-size: 10px; color: #8B6F47; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+.digest-p { font-size: 13.5px; color: #3A342D; line-height: 1.6; }
+.digest-p .pill { display: inline-block; background: white; border: 1px solid #D4C9B8; padding: 2px 9px; border-radius: 10px; font-size: 12px; margin: 2px 3px 2px 0; }
+.digest-reflect { margin-top: 16px; padding: 16px 18px; background: white; border-radius: 4px; font-family: Georgia, serif; font-style: italic; font-size: 15px; line-height: 1.55; border-left: 2px solid #8B6F47; }
+.digest-toggle { background: none; border: 1px solid #D4C9B8; border-radius: 100px; padding: 6px 16px; font-family: inherit; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8B6F47; cursor: pointer; margin-top: 10px; }
+
+/* STORM BREATH */
+.breath-module { background: linear-gradient(135deg, #DDE4EB 0%, #F0F2F5 100%); padding: 32px 20px; border-radius: 4px; text-align: center; border: 1px solid #C9D2DB; display: none; }
+body.storm .breath-module { display: block; }
+.breath-label { font-size: 10px; color: #5A6B7D; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+.breath-title { font-family: Georgia, serif; font-size: 18px; color: #2C3A47; margin-bottom: 22px; font-style: italic; line-height: 1.5; }
+.breath-stage {
+  width: 180px; height: 180px; margin: 0 auto 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #FFF 0%, #C9D2DB 70%, #8FA2B5 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: #2C3A47; font-family: Georgia, serif; font-size: 15px; font-style: italic;
+  transform: scale(0.5); animation: breathe 19s ease-in-out infinite;
+  box-shadow: 0 2px 20px rgba(90,107,125,0.15);
+}
+@keyframes breathe {
+  0% { transform: scale(0.55); } 21% { transform: scale(1); }
+  57.9% { transform: scale(1); } 100% { transform: scale(0.55); }
+}
+.breath-text { font-family: Georgia, serif; font-size: 13px; color: #5A6B7D; margin-top: 8px; }
+
+/* NORTH STAR */
+.north-star { background: #F3EEE3; padding: 26px 28px; border-left: 2px solid #8B6F47; border-radius: 0 4px 4px 0; }
+body.storm .north-star { background: #E4E8ED; border-left-color: #5A6B7D; }
+.north-star .line { margin-bottom: 10px; font-size: 14px; color: #3A342D; line-height: 1.6; }
+.north-star .line:last-of-type { margin-bottom: 24px; }
+.north-star strong { color: #1F1B16; font-weight: 600; }
+.countdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.count-block { text-align: center; padding: 16px 6px; background: white; border: 1px solid #E8E0D3; border-radius: 4px; }
+.count-number { font-family: Georgia, serif; font-size: 24px; color: #1F1B16; display: block; margin-bottom: 4px; line-height: 1; }
+.count-label { font-size: 10px; color: #6B6259; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.trend { margin-top: 16px; padding: 14px 16px; background: white; border: 1px solid #E8E0D3; border-radius: 4px; }
+.trend-label { font-size: 10px; color: #8B6F47; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+.trend-bars { display: flex; align-items: flex-end; gap: 3px; height: 32px; }
+.trend-bar { flex: 1; background: #E8E0D3; border-radius: 2px 2px 0 0; min-height: 3px; transition: height 0.4s ease; }
+.trend-bar.high   { background: #B08968; }
+.trend-bar.medium { background: #C9B896; }
+.trend-bar.low    { background: #DDD0B8; }
+.trend-bar.empty  { background: #F3EEE3; }
+
+/* MORNING Q */
+.morning-q { background: white; padding: 38px 30px; border-radius: 4px; border: 1px solid #E8E0D3; text-align: center; position: relative; }
+body.storm .morning-q { background: #F4F6F8; border-color: #C9D2DB; }
+.morning-q::before { content: '"'; position: absolute; top: -4px; left: 20px; font-family: Georgia, serif; font-size: 60px; color: #D4C9B8; line-height: 1; }
+.quote-friend { border-left: 3px solid #B08968; }
+.quote-friend::before { color: #E5CDB0; }
+.quote-monk { border-left: 3px solid #6B5D7A; }
+.quote-monk::before { color: #CFC4D8; }
+.question-text { font-family: Georgia, serif; font-size: 19px; line-height: 1.55; margin-bottom: 18px; font-style: italic; }
+.attribution { font-size: 10px; color: #8B6F47; letter-spacing: 0.2em; text-transform: uppercase; }
+
+/* MIRROR CARDS */
+.mirror { background: white; padding: 22px 24px; border: 1px solid #E8E0D3; border-radius: 4px; margin-bottom: 12px; }
+body.storm .mirror { background: #F4F6F8; border-color: #D2D9E0; }
+.mirror-title { font-family: Georgia, serif; font-size: 16px; margin-bottom: 4px; }
+.mirror-sub { font-size: 10px; color: #8B6F47; margin-bottom: 18px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+.check-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #F3EEE3; font-size: 14px; gap: 16px; }
+.check-row:last-child { border-bottom: none; padding-bottom: 2px; }
+.check-row label { color: #3A342D; flex: 1; min-width: 0; }
+
+.toggle-group { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.toggle-btn { padding: 5px 12px; font-size: 12px; border: 1px solid #D4C9B8; background: #FAF7F2; color: #6B6259; border-radius: 20px; cursor: pointer; font-family: inherit; transition: all 0.12s ease; }
+.toggle-btn:hover { border-color: #8B6F47; color: #1F1B16; }
+.toggle-btn.active { background: #8B6F47; color: white; border-color: #8B6F47; }
+
+.slider-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.slider-wrap input[type="range"] { width: 100px; accent-color: #8B6F47; }
+.slider-value { font-family: Georgia, serif; font-size: 16px; min-width: 20px; text-align: center; }
+
+/* TAP TILES */
+.tile-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.tile-grid:last-child { margin-bottom: 0; }
+.tile { padding: 8px 13px; background: #FAF7F2; border: 1px solid #E8E0D3; border-radius: 100px; font-family: inherit; font-size: 13px; color: #3A342D; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.12s ease; }
+.tile:hover { border-color: #8B6F47; background: white; }
+.tile.on { background: #8B6F47; color: white; border-color: #8B6F47; }
+.tile .emoji { font-size: 14px; }
+
+.big-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.big-tile { padding: 14px 6px; background: #FAF7F2; border: 1px solid #E8E0D3; border-radius: 4px; font-family: inherit; font-size: 12px; cursor: pointer; text-align: center; transition: all 0.12s ease; }
+.big-tile:hover { border-color: #8B6F47; background: white; }
+.big-tile.on { background: #F3EEE3; border-color: #8B6F47; }
+.big-tile .emoji { display: block; font-size: 22px; margin-bottom: 4px; }
+.phase-tile { padding: 10px 4px; } .phase-tile .emoji { font-size: 20px; margin-bottom: 2px; }
+
+.deep .mirror { border-top: 2px solid #6B5D7A; }
+.dark .mirror { border-top: 2px solid #4A3F35; }
+.bright .mirror { border-top: 2px solid #B08968; }
+.silent .mirror { border-top: 2px solid #6B6259; }
+.commits .mirror { border-top: 2px solid #4A7A4A; }
+.monthly .mirror { border-top: 2px solid #5A6B7D; }
+.sub-group-label { font-size: 11px; color: #6B5D7A; margin: 14px 0 8px; letter-spacing: 0.08em; font-weight: 500; }
+.sub-group-label:first-child { margin-top: 4px; }
+
+body.storm .dark .locked-content, body.storm .silent .locked-content { opacity: 0.4; pointer-events: none; }
+body.storm .storm-rest { display: block; }
+.storm-rest { display: none; padding: 16px 20px; background: #DEE3E8; border-left: 3px solid #5A6B7D; border-radius: 0 4px 4px 0; color: #2C3A47; font-size: 13px; margin-bottom: 12px; font-style: italic; }
+
+/* MISSIONS */
+.mission { display: flex; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid #F3EEE3; }
+.mission:last-child { border-bottom: none; padding-bottom: 2px; }
+.mission-check { width: 20px; height: 20px; border: 1.5px solid #8B6F47; border-radius: 50%; margin-right: 14px; flex-shrink: 0; margin-top: 2px; cursor: pointer; background: white; position: relative; transition: all 0.12s ease; }
+.mission-check:hover { background: #F3EEE3; }
+.mission-check.done { background: #8B6F47; }
+.mission-check.done::after { content: '✓'; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: bold; }
+.mission-body { flex: 1; }
+.mission-title { font-size: 14px; color: #1F1B16; margin-bottom: 3px; font-weight: 500; }
+.mission.done .mission-title { text-decoration: line-through; color: #8B6F47; }
+.mission-desc { font-size: 12.5px; color: #6B6259; line-height: 1.55; }
+.mission-target { display: inline-block; font-size: 10px; color: #8B6F47; background: #F3EEE3; padding: 2px 9px; border-radius: 10px; margin-top: 6px; margin-right: 6px; }
+.mission-step-btn {
+  display: inline-block; font-size: 10px; color: #4A7A4A;
+  background: white; border: 1px solid #B8D4B8; padding: 2px 9px;
+  border-radius: 10px; margin-top: 6px; cursor: pointer; font-family: inherit;
+  letter-spacing: 0.05em;
+}
+.mission-step-btn:hover { background: #E8F3E8; }
+.mission-step-btn.stepped { background: #4A7A4A; color: white; border-color: #4A7A4A; }
+
+/* COMMITS */
+.commits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.commit-tile {
+  padding: 12px 10px; background: #FAF7F2; border: 1px solid #E8E0D3;
+  border-radius: 6px; font-family: inherit; font-size: 13px; color: #3A342D;
+  cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px;
+  line-height: 1.3; transition: all 0.12s ease;
+}
+.commit-tile:hover { border-color: #8B6F47; background: white; }
+.commit-tile.on { background: #E8F3E8; border-color: #4A7A4A; color: #1F1B16; }
+.commit-tile .emoji { font-size: 18px; flex-shrink: 0; }
+.commit-tile.on::after { content: '✓'; margin-left: auto; color: #4A7A4A; font-weight: bold; }
+
+/* MONTHLY */
+.monthly-prompt {
+  padding: 16px 20px; background: #E4E8ED; border-left: 3px solid #5A6B7D;
+  border-radius: 0 4px 4px 0; font-size: 13px; margin-bottom: 16px; line-height: 1.6;
+  color: #2C3A47;
+}
+.monthly-prompt strong { display: block; margin-bottom: 4px; letter-spacing: 0.05em; font-size: 11px; text-transform: uppercase; }
+
+/* TENSION */
+.tension-section { background: linear-gradient(135deg, #F3EEE3 0%, #FAF7F2 100%); padding: 28px 24px; border-radius: 4px; text-align: center; border: 1px solid #E8E0D3; }
+body.storm .tension-section { background: linear-gradient(135deg, #DDE4EB 0%, #F0F2F5 100%); border-color: #C9D2DB; }
+.tension-prompt { font-family: Georgia, serif; font-size: 16px; line-height: 1.6; margin-bottom: 22px; font-style: italic; }
+.tension-slider { width: 100%; max-width: 280px; margin: 6px auto; accent-color: #8B6F47; }
+.tension-labels { display: flex; justify-content: space-between; max-width: 280px; margin: 4px auto 0; font-size: 10px; color: #6B6259; letter-spacing: 0.1em; text-transform: uppercase; }
+.tension-response { font-size: 13.5px; padding: 16px 20px; background: white; border-radius: 4px; margin-top: 20px; line-height: 1.65; border-left: 2px solid #8B6F47; text-align: left; }
+
+/* SAVE */
+.save-row { text-align: center; padding: 28px 0 8px; }
+.save-btn { padding: 14px 36px; background: #1F1B16; color: white; border: none; border-radius: 100px; font-family: inherit; font-size: 14px; letter-spacing: 0.1em; cursor: pointer; transition: all 0.15s ease; }
+.save-btn:hover { background: #8B6F47; }
+.save-btn:disabled { background: #8B6F47; opacity: 0.5; cursor: not-allowed; }
+.save-status { margin-top: 14px; font-size: 12px; color: #8B6F47; letter-spacing: 0.1em; text-transform: uppercase; min-height: 14px; }
+
+/* FOOTER */
+footer { text-align: center; padding: 36px 20px 0; border-top: 1px solid #E8E0D3; margin-top: 48px; }
+footer .quote { font-style: italic; font-family: Georgia, serif; font-size: 14px; line-height: 1.6; margin-bottom: 14px; max-width: 520px; margin-left: auto; margin-right: auto; }
+footer .note { font-size: 10px; color: #8B6F47; letter-spacing: 0.18em; text-transform: uppercase; }
+
+/* OVERLAY */
+.overlay { position: fixed; inset: 0; background: rgba(31,27,22,0.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+.overlay.show { display: flex; }
+.overlay-card { background: #FAF7F2; border-radius: 8px; padding: 28px 24px; max-width: 560px; width: 100%; max-height: 92vh; overflow-y: auto; }
+.overlay-title { font-family: Georgia, serif; font-size: 22px; margin-bottom: 4px; }
+.overlay-sub { font-size: 11px; color: #8B6F47; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 24px; }
+.set-block { padding: 16px 0; border-bottom: 1px solid #E8E0D3; }
+.set-block:last-child { border-bottom: none; }
+.set-label { font-size: 12px; color: #6B6259; margin-bottom: 8px; line-height: 1.5; }
+.set-value { font-family: ui-monospace, 'SF Mono', Monaco, monospace; font-size: 12px; background: white; border: 1px solid #E8E0D3; border-radius: 4px; padding: 10px 12px; word-break: break-all; margin-bottom: 10px; }
+.set-btn { padding: 8px 16px; background: white; border: 1px solid #D4C9B8; border-radius: 100px; font-family: inherit; font-size: 12px; color: #1F1B16; cursor: pointer; margin-right: 6px; margin-top: 4px; }
+.set-btn:hover { background: #F3EEE3; border-color: #8B6F47; }
+.set-btn.primary { background: #1F1B16; color: white; border-color: #1F1B16; }
+.set-btn.primary:hover { background: #8B6F47; border-color: #8B6F47; }
+.set-btn.danger { color: #B03E2D; border-color: #E5C3BC; }
+.set-btn.danger:hover { background: #F5E6E3; }
+
+/* MISSION EDIT */
+.mission-edit-item { padding: 14px 0; border-bottom: 1px solid #E8E0D3; }
+.mission-edit-item:last-child { border-bottom: none; }
+.mission-edit-item .gate-input { margin-bottom: 6px; font-size: 13px; padding: 8px 12px; }
+.mission-edit-item .row { display: flex; gap: 6px; margin-top: 4px; }
+.custom-tile-wrap { position: relative; display: inline-flex; }
+.custom-tile-x {
+  position: absolute; top: -6px; right: -6px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #B03E2D; color: white;
+  font-size: 11px; line-height: 18px; text-align: center;
+  cursor: pointer; border: none; padding: 0;
+  opacity: 0; transition: opacity 0.15s;
+}
+.custom-tile-wrap:hover .custom-tile-x { opacity: 1; }
+
+/* HOMEWORK OVERLAY */
+.hw-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+.hw-tab {
+  flex: 1; padding: 10px 12px; background: white; border: 1px solid #D4C9B8;
+  border-radius: 6px; font-family: inherit; font-size: 12px; color: #6B6259;
+  cursor: pointer; letter-spacing: 0.05em;
+}
+.hw-tab.active { background: #1F1B16; color: white; border-color: #1F1B16; }
+.hw-preview {
+  background: white; border: 1px solid #E8E0D3; border-radius: 4px;
+  padding: 14px 16px; font-family: ui-monospace, 'SF Mono', Monaco, monospace;
+  font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  max-height: 360px; overflow-y: auto; color: #3A342D;
+}
+.hw-hint { font-size: 11px; color: #8B6F47; margin-top: 10px; line-height: 1.5; }
+
+@media (max-width: 520px) {
+  #app { padding: 20px 14px 80px; font-size: 14px; }
+  h1 { font-size: 30px; }
+  .check-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .toggle-group { justify-content: flex-start; }
+  .countdown { gap: 6px; }
+  .count-number { font-size: 20px; }
+  .morning-q { padding: 28px 20px; }
+  .question-text { font-size: 17px; }
+  .big-grid { grid-template-columns: repeat(3, 1fr); }
+  .digest-grid { grid-template-columns: repeat(2, 1fr); }
+  .commits-grid { grid-template-columns: 1fr; }
+  .header-btns { position: static; justify-content: center; margin: 0 auto 14px; }
+}
+</style>
+</head>
+<body class="locked">
+
+<!-- GATE -->
+<div id="gate">
+  <div class="gate-card">
+    <div id="screenWelcome" class="gate-screen">
+      <div class="gate-title">Morning</div>
+      <div class="gate-subtitle">Private</div>
+      <p class="gate-prompt">ครั้งแรกที่คุณมา?</p>
+      <p class="gate-hint">เลือกว่าจะเริ่มใหม่ หรือกู้ข้อมูลจากเครื่องอื่น</p>
+      <button class="gate-big-btn" id="btnNew">เริ่มใหม่</button>
+      <button class="gate-big-btn secondary" id="btnRestore">ต่อจาก cloud</button>
+    </div>
+
+    <div id="screenPin" class="gate-screen">
+      <div class="gate-title">Morning</div>
+      <div class="gate-subtitle" id="pinSub">Private</div>
+      <p class="gate-prompt" id="pinPrompt">ใส่รหัส 4 หลัก</p>
+      <p class="gate-hint" id="pinHint">&nbsp;</p>
+      <div class="lock-dots" id="lockDots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="numpad" id="numpad">
+        <button class="np-btn" data-n="1">1</button><button class="np-btn" data-n="2">2</button><button class="np-btn" data-n="3">3</button>
+        <button class="np-btn" data-n="4">4</button><button class="np-btn" data-n="5">5</button><button class="np-btn" data-n="6">6</button>
+        <button class="np-btn" data-n="7">7</button><button class="np-btn" data-n="8">8</button><button class="np-btn" data-n="9">9</button>
+        <button class="np-btn ghost" data-a="clear">ลบ</button><button class="np-btn" data-n="0">0</button><button class="np-btn ghost" data-a="back">กลับ</button>
+      </div>
+      <div class="gate-status" id="pinStatus"></div>
+      <button class="gate-link" id="gateForgot" style="display:none">ลืมรหัส · ล้างเครื่องนี้</button>
+    </div>
+
+    <div id="screenRestore" class="gate-screen">
+      <div class="gate-title">Morning</div>
+      <div class="gate-subtitle">ต่อจาก cloud</div>
+      <p class="gate-hint">วาง Master Key + Bin ID จากเครื่องเดิม</p>
+      <input type="password" class="gate-input" id="restoreKey" placeholder="JSONBin Master Key" autocomplete="off">
+      <input type="text" class="gate-input" id="restoreBin" placeholder="Bin ID" autocomplete="off">
+      <button class="gate-big-btn" id="btnRestoreFetch">ดึงข้อมูล</button>
+      <button class="gate-link" id="btnRestoreBack">ย้อนกลับ</button>
+      <div class="gate-status" id="restoreStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<main id="app">
+  <div class="banner" id="banner"></div>
+  <section><div class="digest" id="digest"></div></section>
+
+  <header>
+    <div class="header-btns">
+      <button class="header-btn primary" id="btnHomework">📝 การบ้าน</button>
+      <button class="header-btn" id="btnSettings"><span class="sync-ind off" id="syncDot"></span>ตั้งค่า</button>
+      <button class="header-btn" id="lockNowBtn">🔒 ล็อก</button>
+    </div>
+    <p class="date" id="date"></p>
+    <h1>กระจกชีวิต</h1>
+    <p class="subtitle">มองตัวเองเงียบๆ ก่อนวันเริ่ม</p>
+    <p class="last-visit" id="lastVisit"></p>
+    <button class="digest-toggle" id="digestToggle" style="display:none">ดูสรุปสัปดาห์</button>
+  </header>
+
+  <section>
+    <div class="breath-module" id="breathModule">
+      <div class="breath-label">โหมดพายุ · Storm Mode</div>
+      <div class="breath-title">วันนี้ยาก ยอมรับว่ายาก<br>คือคำตอบ</div>
+      <div class="breath-stage" id="breathStage">หายใจ</div>
+      <div class="breath-text">หายใจเข้า 4 · หยุด 7 · ออก 8</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ทิศ · North Star</h2>
+    <div class="north-star">
+      <p class="line"><strong>ปลายทางไกล</strong> · ไม่อยากกลับมาเกิดอีก — อย่างน้อยให้ถึงโสดาบัน</p>
+      <p class="line"><strong>เป้าปีนี้</strong> · ลุยงานปีสุดท้าย จัดระบบ passive ให้มั่น เตรียมเกษียณวันเกิด 40</p>
+      <p class="line"><strong>ที่ต้องระวัง</strong> · ทิศที่ 2 ที่กำลังก่อร่าง — ทางออกจริง หรือกรงใหม่?</p>
+      <div class="countdown" id="countdown"></div>
+      <div class="trend"><div class="trend-label">14 วันที่ผ่านมา · เงาภายใน</div><div class="trend-bars" id="shadowTrend"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 id="questionHeader">คำถามเช้านี้</h2>
+    <div class="morning-q">
+      <p class="question-text" id="dailyQuestion"></p>
+      <p class="attribution">จากเพื่อนคุณ</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>เตือนสติทางโลก · จากเพื่อน</h2>
+    <div class="morning-q quote-friend">
+      <p class="question-text" id="quoteFriend"></p>
+      <p class="attribution">สไตล์ "นิ้วกลม"</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>เตือนสติทางธรรม · จากพระอาจารย์</h2>
+    <div class="morning-q quote-monk">
+      <p class="question-text" id="quoteMonk"></p>
+      <p class="attribution">สไตล์ ว. วชิรเมธี / ไพศาล วิสาโล</p>
+    </div>
+  </section>
+
+  <!-- DAILY COMMITS -->
+  <section class="commits">
+    <h2>การบ้านรายวัน · 3 เรื่องเล็กๆ</h2>
+    <div class="mirror">
+      <div class="mirror-title">3 Tiny Commitments</div>
+      <div class="mirror-sub">แตะที่ทำวันนี้ · เล็กๆ ง่ายๆ ต่อเนื่อง</div>
+      <div class="commits-grid" data-commits>
+        <button class="commit-tile" data-v="sit"><span class="emoji">🧘</span>นั่งสมาธิ 5-10 น.</button>
+        <button class="commit-tile" data-v="move"><span class="emoji">🚶</span>เดิน/ขยับ 10+ น.</button>
+        <button class="commit-tile" data-v="water"><span class="emoji">💧</span>ดื่มน้ำ 8 แก้ว</button>
+        <button class="commit-tile" data-v="dharma"><span class="emoji">📚</span>อ่าน/ฟังธรรม 5 น.</button>
+        <button class="commit-tile" data-v="wife"><span class="emoji">💕</span>ทักภรรยาอย่างมีใจ</button>
+        <button class="commit-tile" data-v="parents"><span class="emoji">📞</span>ทักพ่อแม่</button>
+        <button class="commit-tile" data-v="chant"><span class="emoji">📿</span>สวดพุทโธ 1 รอบ</button>
+        <button class="commit-tile" data-v="sun"><span class="emoji">🌳</span>ออกแดด/ธรรมชาติ</button>
+        <button class="commit-tile" data-v="exercise"><span class="emoji">🏋️</span>ออกกำลังจริง 30+ น.</button>
+        <button class="commit-tile" data-v="eatslow"><span class="emoji">🍽️</span>กินช้ามีสติ 1 มื้อ</button>
+        <button class="commit-tile" data-v="phoneoff"><span class="emoji">📵</span>พักจากมือถือ 30+ น.</button>
+        <button class="commit-tile" data-v="thanks"><span class="emoji">🙏</span>ขอบคุณใครมีใจ</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>กระจก 4 ด้าน · เช็กอินเช้านี้</h2>
+    <div class="mirror">
+      <div class="mirror-title">ธรรมะ + ใจ</div><div class="mirror-sub">Dharma & Mind</div>
+      <div class="check-row"><label>ศีล 5 วันนี้</label><div class="toggle-group" data-key="sila"><button class="toggle-btn" data-val="yes">ครบ</button><button class="toggle-btn" data-val="almost">เกือบ</button><button class="toggle-btn" data-val="no">ยังไม่</button></div></div>
+      <div class="check-row"><label>นั่งสมาธิ / ดูลมหายใจ</label><div class="toggle-group" data-key="med"><button class="toggle-btn" data-val="no">ยัง</button><button class="toggle-btn" data-val="short">5–15 น.</button><button class="toggle-btn" data-val="long">20+ น.</button></div></div>
+      <div class="check-row"><label>พูดความจริงกับตัวเองไหม</label><div class="toggle-group" data-key="truth"><button class="toggle-btn" data-val="yes">จริง</button><button class="toggle-btn" data-val="mixed">ครึ่งๆ</button><button class="toggle-btn" data-val="no">หลอก</button></div></div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">สุขภาพ + ร่างกาย</div><div class="mirror-sub">Health & Body</div>
+      <div class="check-row"><label>นอนคืนก่อน</label><div class="slider-wrap"><input type="range" min="1" max="10" value="7" id="sleep-slider"><span class="slider-value" id="sleep-val">7</span></div></div>
+      <div class="check-row"><label>ขยับตัววันนี้</label><div class="toggle-group" data-key="move"><button class="toggle-btn" data-val="none">ไม่ได้</button><button class="toggle-btn" data-val="little">&lt; 20 น.</button><button class="toggle-btn" data-val="good">30+ น.</button></div></div>
+      <div class="check-row"><label>ลำไส้วันนี้</label><div class="toggle-group" data-key="gut"><button class="toggle-btn" data-val="ok">โอเค</button><button class="toggle-btn" data-val="rush">เร่งด่วน</button><button class="toggle-btn" data-val="bad">ผิดปกติ</button></div></div>
+      <div class="check-row"><label>ผัก/โยเกิร์ต/สับปะรด</label><div class="toggle-group" data-key="food"><button class="toggle-btn" data-val="yes">ครบ</button><button class="toggle-btn" data-val="partial">บางส่วน</button><button class="toggle-btn" data-val="no">ไม่</button></div></div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">ธุรกิจ + เกษียณ</div><div class="mirror-sub">Work & Retirement</div>
+      <div class="check-row"><label>โฟกัสงานใหญ่ 1 ชิ้น</label><div class="toggle-group" data-key="focus"><button class="toggle-btn" data-val="yes">ใช่</button><button class="toggle-btn" data-val="scattered">กระจาย</button><button class="toggle-btn" data-val="no">ไม่ได้ทำ</button></div></div>
+      <div class="check-row"><label>ใช้จ่ายวันนี้</label><div class="toggle-group" data-key="spend"><button class="toggle-btn" data-val="need">จำเป็น</button><button class="toggle-btn" data-val="mixed">กลางๆ</button><button class="toggle-btn" data-val="escape">เพื่อหนี</button></div></div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">ความสัมพันธ์</div><div class="mirror-sub">Relationships</div>
+      <div class="check-row"><label>อยู่กับภรรยาจริงๆ</label><div class="toggle-group" data-key="wife"><button class="toggle-btn" data-val="yes">ใช่</button><button class="toggle-btn" data-val="abit">นิดหน่อย</button><button class="toggle-btn" data-val="no">ไม่เลย</button></div></div>
+      <div class="check-row"><label>ทักพ่อ / แม่</label><div class="toggle-group" data-key="parents"><button class="toggle-btn" data-val="yes">ทัก</button><button class="toggle-btn" data-val="no">ยัง</button></div></div>
+      <div class="check-row"><label>เพื่อนที่เลือก "ลึก"</label><div class="toggle-group" data-key="friend"><button class="toggle-btn" data-val="yes">ติดต่อ</button><button class="toggle-btn" data-val="no">ยัง</button></div></div>
+    </div>
+  </section>
+
+  <section class="deep">
+    <h2>มุมลึก · Deep</h2>
+    <div class="mirror">
+      <div class="mirror-title">เงาที่ซ่อน · โลภ โกรธ หลง</div>
+      <div class="mirror-sub">3 รากของทุกข์ · แตะทุกข้อที่เห็นในใจวันนี้</div>
+      <div class="sub-group-label">โลภ — อยากได้ อยากเสพ อยากครอง</div>
+      <div class="tile-grid" data-multi="shadow">
+        <button class="tile" data-v="greed"><span class="emoji">💰</span>อยากได้อีก</button>
+        <button class="tile" data-v="lust"><span class="emoji">🌊</span>อยากเสพ</button>
+        <button class="tile" data-v="own"><span class="emoji">🔒</span>อยากครอง</button>
+        <button class="tile" data-v="ego"><span class="emoji">👑</span>อยากเด่น</button>
+      </div>
+      <div class="sub-group-label">โกรธ — ไม่พอใจ เอาชนะ ตัดสิน</div>
+      <div class="tile-grid" data-multi="shadow">
+        <button class="tile" data-v="anger"><span class="emoji">🔥</span>ฉุน ไม่พอใจ</button>
+        <button class="tile" data-v="compete"><span class="emoji">⚔️</span>แข่งเอาชนะ</button>
+        <button class="tile" data-v="judge"><span class="emoji">👁️</span>ตัดสินคน</button>
+        <button class="tile" data-v="block"><span class="emoji">🚧</span>กั้นไม่ให้เข้า</button>
+      </div>
+      <div class="sub-group-label">หลง — ลืมตัว สวมหน้ากาก ยึดติด</div>
+      <div class="tile-grid" data-multi="shadow">
+        <button class="tile" data-v="delude"><span class="emoji">🌀</span>หลงตัวตน</button>
+        <button class="tile" data-v="mask"><span class="emoji">🎭</span>สวมหน้ากาก</button>
+        <button class="tile" data-v="attach"><span class="emoji">🔗</span>ผูกพันยึดติด</button>
+        <button class="tile" data-v="confuse"><span class="emoji">🌫️</span>สับสน ลืมทาง</button>
+      </div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">กรรม · ความรู้สึกภายใน</div><div class="mirror-sub">Karma · เลือก 1</div>
+      <div class="big-grid" data-single="karma">
+        <button class="big-tile" data-v="light"><span class="emoji">✨</span>วันเบา</button>
+        <button class="big-tile" data-v="haze"><span class="emoji">🌫️</span>มีหมอก</button>
+        <button class="big-tile" data-v="ripen"><span class="emoji">⚡</span>รู้สึกสุก</button>
+        <button class="big-tile" data-v="accumul"><span class="emoji">🌊</span>กำลังสะสม</button>
+      </div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">ถ้าพรุ่งนี้ไม่มา</div><div class="mirror-sub">Memento Mori · เลือก 1</div>
+      <div class="big-grid" data-single="mortality">
+        <button class="big-tile phase-tile" data-v="ready"><span class="emoji">🌿</span>พร้อม</button>
+        <button class="big-tile phase-tile" data-v="adjust"><span class="emoji">🌾</span>ปรับได้</button>
+        <button class="big-tile phase-tile" data-v="notyet"><span class="emoji">🌪️</span>ยังไม่</button>
+        <button class="big-tile phase-tile" data-v="avoid"><span class="emoji">🌌</span>ไม่กล้าคิด</button>
+      </div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">ตอนนี้ใจเอนไปทางไหน</div>
+      <div class="mirror-sub">Mind Leans Where · เลือก 1</div>
+      <div class="big-grid" data-single="leans">
+        <button class="big-tile phase-tile" data-v="lobha"><span class="emoji">🔥</span>โลภ อยากเพิ่ม</button>
+        <button class="big-tile phase-tile" data-v="dosa"><span class="emoji">⚡</span>โกรธ อยากผลัก</button>
+        <button class="big-tile phase-tile" data-v="moha"><span class="emoji">🌫️</span>หลง อยากลืม</button>
+        <button class="big-tile phase-tile" data-v="balanced"><span class="emoji">🌳</span>ไม่เอน สมดุล</button>
+      </div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">สัปดาห์นี้ต้องลดอะไรมากที่สุด</div>
+      <div class="mirror-sub">To Release This Week · เลือก 1</div>
+      <div class="big-grid" data-single="toRelease">
+        <button class="big-tile phase-tile" data-v="want"><span class="emoji">💰</span>ลดการอยากได้</button>
+        <button class="big-tile phase-tile" data-v="win"><span class="emoji">🔥</span>ลดการเอาชนะ</button>
+        <button class="big-tile phase-tile" data-v="mask"><span class="emoji">🎭</span>ลดการสวมหน้ากาก</button>
+        <button class="big-tile phase-tile" data-v="hide"><span class="emoji">🕯️</span>ลดความลับ</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="dark">
+    <h2>มุมมืด · Dark</h2>
+    <div class="storm-rest">วันนี้พายุ — มุมมืดพักไว้</div>
+    <div class="locked-content">
+      <div class="mirror">
+        <div class="mirror-title">เงาภายใน</div><div class="mirror-sub">Inner Pull</div>
+        <div class="check-row"><label>เสียงกระซิบของทิศอื่นวันนี้</label><div class="slider-wrap"><input type="range" min="0" max="10" value="0" id="shadow-slider"><span class="slider-value" id="shadow-val">0</span></div></div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">ที่ "เกือบ" พลาดวันนี้</div><div class="mirror-sub">Near-Miss</div>
+        <div class="tile-grid" data-multi="nearmiss">
+          <button class="tile" data-v="pull"><span class="emoji">🌊</span>แรงกระซิบ</button>
+          <button class="tile" data-v="lie"><span class="emoji">🎭</span>โกหก</button>
+          <button class="tile" data-v="greedy"><span class="emoji">💰</span>โลภ</button>
+          <button class="tile" data-v="angry"><span class="emoji">🔥</span>ฉุน</button>
+          <button class="tile" data-v="hidden"><span class="emoji">🕯️</span>แอบ</button>
+          <button class="tile" data-v="cheat"><span class="emoji">⚖️</span>หลอก</button>
+          <button class="tile" data-v="gossip"><span class="emoji">🗣️</span>นินทา</button>
+          <button class="tile" data-v="none"><span class="emoji">✓</span>ไม่มี</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">ทิศที่ 2 วันนี้</div><div class="mirror-sub">Second Direction · เลือก 1</div>
+        <div class="big-grid" data-single="world2">
+          <button class="big-tile phase-tile" data-v="far"><span class="emoji">🌕</span>ห่าง</button>
+          <button class="big-tile phase-tile" data-v="normal"><span class="emoji">🌖</span>ปกติ</button>
+          <button class="big-tile phase-tile" data-v="close"><span class="emoji">🌗</span>ใกล้</button>
+          <button class="big-tile phase-tile" data-v="tooclose"><span class="emoji">🌘</span>ใกล้เกิน</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">คนที่อาจเจ็บเงียบๆ</div><div class="mirror-sub">Silent Hurts</div>
+        <div class="tile-grid" data-multi="hurts">
+          <button class="tile" data-v="wife"><span class="emoji">🏠</span>ภรรยา</button>
+          <button class="tile" data-v="parents"><span class="emoji">👨‍👩</span>พ่อแม่</button>
+          <button class="tile" data-v="staff"><span class="emoji">🧑‍💼</span>คนงาน</button>
+          <button class="tile" data-v="partner"><span class="emoji">🤝</span>คู่ค้า</button>
+          <button class="tile" data-v="stranger"><span class="emoji">👤</span>คนแปลก</button>
+          <button class="tile" data-v="self"><span class="emoji">🪞</span>ตัวเอง</button>
+          <button class="tile" data-v="none"><span class="emoji">🌱</span>ไม่มี</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">เห็นสายตาสวยงามวันนี้แล้วใจไปแบบไหน</div>
+        <div class="mirror-sub">Eyes & Heart · เลือก 1</div>
+        <div class="big-grid" data-single="gaze">
+          <button class="big-tile phase-tile" data-v="still"><span class="emoji">🌿</span>สงบ ไม่ลอย</button>
+          <button class="big-tile phase-tile" data-v="flash"><span class="emoji">🍃</span>แว้บ ผ่านไป</button>
+          <button class="big-tile phase-tile" data-v="linger"><span class="emoji">🌊</span>ลอยนาน</button>
+          <button class="big-tile phase-tile" data-v="flame"><span class="emoji">🔥</span>ไฟลุก</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">หลัง "เดินทางครั้งล่าสุด" รู้สึกอย่างไร</div>
+        <div class="mirror-sub">After Journey · แตะทุกข้อที่จริง</div>
+        <div class="tile-grid" data-multi="afterfeel">
+          <button class="tile" data-v="light"><span class="emoji">✨</span>เบาใจ ได้ปล่อย</button>
+          <button class="tile" data-v="guilt"><span class="emoji">😔</span>ผิดในใจ</button>
+          <button class="tile" data-v="loop"><span class="emoji">🔁</span>วนต้องการอีก</button>
+          <button class="tile" data-v="emptier"><span class="emoji">🌑</span>ว่างกว่าเดิม</button>
+          <button class="tile" data-v="other"><span class="emoji">🎭</span>เหมือนเป็นคนอื่น</button>
+          <button class="tile" data-v="tired"><span class="emoji">⏳</span>เหนื่อย</button>
+          <button class="tile" data-v="none"><span class="emoji">🌱</span>ไม่เกิดช่วงนี้</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">ราคาที่จ่ายสัปดาห์นี้ (ไม่ใช่เงิน)</div>
+        <div class="mirror-sub">True Cost · แตะทุกข้อที่จริง</div>
+        <div class="tile-grid" data-multi="cost">
+          <button class="tile" data-v="time"><span class="emoji">⏰</span>เวลา</button>
+          <button class="tile" data-v="focus"><span class="emoji">🧠</span>สมาธิ</button>
+          <button class="tile" data-v="honesty"><span class="emoji">💕</span>ความซื่อกับภรรยา</button>
+          <button class="tile" data-v="peace"><span class="emoji">🧘</span>ใจสงบ</button>
+          <button class="tile" data-v="self"><span class="emoji">🪞</span>ความซื่อกับตัวเอง</button>
+          <button class="tile" data-v="sila"><span class="emoji">🙏</span>ศีล</button>
+          <button class="tile" data-v="karma"><span class="emoji">🌫️</span>กรรม</button>
+          <button class="tile" data-v="none"><span class="emoji">✓</span>ไม่มี</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bright">
+    <h2>มุมสว่าง · Bright</h2>
+    <div class="mirror">
+      <div class="mirror-title">บุญเล็กๆ วันนี้</div><div class="mirror-sub">Small Merits</div>
+      <div class="tile-grid" data-multi="merits">
+        <button class="tile" data-v="callparent"><span class="emoji">📞</span>ทักพ่อแม่</button>
+        <button class="tile" data-v="give"><span class="emoji">🤲</span>ให้ทาน</button>
+        <button class="tile" data-v="smile"><span class="emoji">😊</span>ยิ้มให้คน</button>
+        <button class="tile" data-v="forgive"><span class="emoji">🙏</span>อโหสิ</button>
+        <button class="tile" data-v="calm"><span class="emoji">🍃</span>ไม่โกรธตอบ</button>
+        <button class="tile" data-v="help"><span class="emoji">🌸</span>ช่วยคน</button>
+        <button class="tile" data-v="chant"><span class="emoji">🕉️</span>สวดมนต์</button>
+        <button class="tile" data-v="sit"><span class="emoji">🧘</span>นั่งสมาธิ</button>
+        <button class="tile" data-v="letgo"><span class="emoji">🌊</span>ปล่อยวาง</button>
+        <button class="tile" data-v="bow"><span class="emoji">🙇</span>กราบผู้ใหญ่</button>
+        <button class="tile" data-v="listen"><span class="emoji">👂</span>ฟังจริงๆ</button>
+        <button class="tile" data-v="praise"><span class="emoji">💐</span>ชมคน</button>
+      </div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">ความงามที่เห็นวันนี้</div><div class="mirror-sub">Beauty Witnessed</div>
+      <div class="tile-grid" data-multi="beauty">
+        <button class="tile" data-v="arch"><span class="emoji">🏛️</span>สถาปัตยกรรม</button>
+        <button class="tile" data-v="nature"><span class="emoji">🌳</span>ธรรมชาติ</button>
+        <button class="tile" data-v="face"><span class="emoji">👤</span>ใบหน้าใคร</button>
+        <button class="tile" data-v="art"><span class="emoji">🎨</span>ศิลปะ</button>
+        <button class="tile" data-v="history"><span class="emoji">📜</span>ประวัติศาสตร์</button>
+        <button class="tile" data-v="light"><span class="emoji">🌅</span>แสง</button>
+        <button class="tile" data-v="dialog"><span class="emoji">💫</span>บทสนทนา</button>
+        <button class="tile" data-v="sound"><span class="emoji">🎵</span>เสียง</button>
+        <button class="tile" data-v="space"><span class="emoji">🏮</span>พื้นที่</button>
+        <button class="tile" data-v="word"><span class="emoji">✍️</span>คำ</button>
+        <button class="tile" data-v="idea"><span class="emoji">💡</span>ความคิด</button>
+        <button class="tile" data-v="miss"><span class="emoji">❌</span>ไม่ทันเห็น</button>
+      </div>
+    </div>
+    <div class="mirror">
+      <div class="mirror-title">ขอบคุณเงียบๆ</div><div class="mirror-sub">Silent Gratitude</div>
+      <div class="tile-grid" data-multi="gratitude">
+        <button class="tile" data-v="home"><span class="emoji">🏠</span>บ้าน</button>
+        <button class="tile" data-v="family"><span class="emoji">👨‍👩‍👧</span>ครอบครัว</button>
+        <button class="tile" data-v="wife"><span class="emoji">❤️</span>ภรรยา</button>
+        <button class="tile" data-v="work"><span class="emoji">💼</span>งาน</button>
+        <button class="tile" data-v="wealth"><span class="emoji">💰</span>เงิน</button>
+        <button class="tile" data-v="friends"><span class="emoji">👥</span>เพื่อน</button>
+        <button class="tile" data-v="teacher"><span class="emoji">🙏</span>ครูอาจารย์</button>
+        <button class="tile" data-v="nation"><span class="emoji">🌏</span>ประเทศไทย</button>
+        <button class="tile" data-v="knowledge"><span class="emoji">📚</span>ความรู้</button>
+        <button class="tile" data-v="freedom"><span class="emoji">🕊️</span>เสรีภาพ</button>
+        <button class="tile" data-v="health"><span class="emoji">💪</span>สุขภาพ</button>
+        <button class="tile" data-v="ai"><span class="emoji">🤖</span>AI</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="silent">
+    <h2>บันทึกเงียบ · Silent Journal</h2>
+    <div class="storm-rest">วันนี้พายุ — บันทึกเงียบพักไว้</div>
+    <div class="locked-content">
+      <div class="mirror">
+        <div class="mirror-title">อารมณ์วันนี้</div><div class="mirror-sub">Mood Palette</div>
+        <div class="tile-grid" data-multi="mood">
+          <button class="tile" data-v="letgo"><span class="emoji">😌</span>ปล่อยวาง</button>
+          <button class="tile" data-v="sad"><span class="emoji">🌧️</span>เศร้า</button>
+          <button class="tile" data-v="hot"><span class="emoji">🔥</span>ร้อน</button>
+          <button class="tile" data-v="deceive"><span class="emoji">😈</span>หลอก</button>
+          <button class="tile" data-v="void"><span class="emoji">🌊</span>ว่าง</button>
+          <button class="tile" data-v="kind"><span class="emoji">🌸</span>กรุณา</button>
+          <button class="tile" data-v="anger"><span class="emoji">⚡</span>โกรธ</button>
+          <button class="tile" data-v="hide"><span class="emoji">🗝️</span>ซ่อน</button>
+          <button class="tile" data-v="calm"><span class="emoji">🌳</span>สงบ</button>
+          <button class="tile" data-v="mask"><span class="emoji">🎭</span>สวมหน้ากาก</button>
+          <button class="tile" data-v="honest"><span class="emoji">🪞</span>ซื่อ</button>
+          <button class="tile" data-v="lonely"><span class="emoji">🌙</span>เหงา</button>
+          <button class="tile" data-v="light"><span class="emoji">💫</span>เบา</button>
+          <button class="tile" data-v="erupt"><span class="emoji">🌋</span>ปะทุ</button>
+          <button class="tile" data-v="flow"><span class="emoji">🍃</span>ไหล</button>
+          <button class="tile" data-v="heavy"><span class="emoji">🪨</span>หนัก</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">ภาพที่ใช่กับวันนี้</div><div class="mirror-sub">Metaphor · เลือก 1</div>
+        <div class="big-grid" data-single="metaphor">
+          <button class="big-tile phase-tile" data-v="peak"><span class="emoji">🏔️</span>ยอดเขา</button>
+          <button class="big-tile phase-tile" data-v="abyss"><span class="emoji">🕳️</span>เหว</button>
+          <button class="big-tile phase-tile" data-v="path"><span class="emoji">🛤️</span>ทางเดิน</button>
+          <button class="big-tile phase-tile" data-v="wave"><span class="emoji">🌊</span>คลื่น</button>
+          <button class="big-tile phase-tile" data-v="island"><span class="emoji">🏝️</span>เกาะ</button>
+          <button class="big-tile phase-tile" data-v="tree"><span class="emoji">🌳</span>ต้นไม้</button>
+          <button class="big-tile phase-tile" data-v="bird"><span class="emoji">🕊️</span>นก</button>
+          <button class="big-tile phase-tile" data-v="key"><span class="emoji">🗝️</span>กุญแจ</button>
+          <button class="big-tile phase-tile" data-v="lock"><span class="emoji">🔒</span>ปิดกุญแจ</button>
+          <button class="big-tile phase-tile" data-v="fire"><span class="emoji">🔥</span>ไฟ</button>
+          <button class="big-tile phase-tile" data-v="drop"><span class="emoji">💧</span>หยดน้ำ</button>
+          <button class="big-tile phase-tile" data-v="sprout"><span class="emoji">🌱</span>หน่อ</button>
+        </div>
+      </div>
+      <div class="mirror">
+        <div class="mirror-title">ประโยคเงียบ</div><div class="mirror-sub">Quiet Statements · เพิ่มประโยคของคุณเองได้</div>
+        <div class="tile-grid" data-multi="statements" id="statementGrid">
+          <button class="tile" data-v="still_good"><span class="emoji">✓</span>วันนี้ผมยังดีอยู่</button>
+          <button class="tile" data-v="missed"><span class="emoji">·</span>วันนี้ผมพลาดบางอย่าง</button>
+          <button class="tile" data-v="tooproud"><span class="emoji">·</span>วันนี้ผมเก่งเกินไป</button>
+          <button class="tile" data-v="lonely"><span class="emoji">·</span>วันนี้ผมเหงา</button>
+          <button class="tile" data-v="wantrun"><span class="emoji">·</span>วันนี้ผมอยากหลบหนี</button>
+          <button class="tile" data-v="wanthold"><span class="emoji">·</span>วันนี้ผมอยากถูกโอบกอด</button>
+          <button class="tile" data-v="wantbe_other"><span class="emoji">·</span>วันนี้ผมอยากเป็นคนอื่น</button>
+          <button class="tile" data-v="wantbe_self"><span class="emoji">·</span>วันนี้ผมอยากเป็นตัวเอง</button>
+          <button class="tile" data-v="see_dharma"><span class="emoji">·</span>วันนี้ผมเห็นธรรม</button>
+          <button class="tile" data-v="feel_karma"><span class="emoji">·</span>วันนี้ผมรู้สึกมีกรรม</button>
+          <button class="tile" data-v="grateful"><span class="emoji">·</span>วันนี้ผมสำนึกบุญคุณ</button>
+          <button class="tile" data-v="sorry"><span class="emoji">·</span>วันนี้ผมขอโทษเงียบๆ</button>
+          <button class="tile" data-v="tired"><span class="emoji">·</span>วันนี้ผมเหนื่อย</button>
+          <button class="tile" data-v="peace"><span class="emoji">·</span>วันนี้ผมสงบพอ</button>
+        </div>
+        <div style="margin-top:14px; padding-top:14px; border-top:1px dashed #E8E0D3; display:flex; gap:6px; flex-wrap:wrap;">
+          <input type="text" class="gate-input" id="newStatement" placeholder="เขียนประโยคของคุณเอง แล้วกด + เพิ่ม" style="flex:1; min-width:200px; margin-bottom:0; font-size:13px;">
+          <button class="set-btn primary" id="btnAddStatement" style="flex-shrink:0;">+ เพิ่ม</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 style="display:flex; justify-content:space-between; align-items:center;"><span>ภารกิจ · จากที่เราคุยกัน</span><button class="header-btn" id="btnEditMissions" style="font-size:10px; padding:4px 10px;">+ แก้ไข</button></h2>
+    <div class="mirror" id="missionList"></div>
+  </section>
+
+  <!-- MONTHLY -->
+  <section class="monthly">
+    <h2>สถิติเดือนนี้ · Monthly Check-in</h2>
+    <div class="monthly-prompt" id="monthlyPrompt"></div>
+    <div class="mirror">
+      <div class="mirror-title" id="monthlyTitle"></div>
+      <div class="mirror-sub">อัพเดตเดือนละครั้ง · จะถูกใช้สร้าง monthly report</div>
+      <div class="check-row"><label>หนี้ลดไปแล้ว (% ของเป้า 3 ปี)</label><div class="slider-wrap"><input type="range" min="0" max="100" value="0" id="m-debt"><span class="slider-value" id="m-debt-val">0</span></div></div>
+      <div class="check-row"><label>เก็บ/ลงทุน % ของรายได้เดือนนี้</label><div class="slider-wrap"><input type="range" min="0" max="100" value="80" id="m-save"><span class="slider-value" id="m-save-val">80</span></div></div>
+      <div class="check-row"><label>Passive income ครอบรายจ่าย</label><div class="slider-wrap"><input type="range" min="0" max="200" value="100" id="m-passive"><span class="slider-value" id="m-passive-val">100</span>%</div></div>
+      <div class="check-row"><label>ตรวจสุขภาพเดือนนี้</label><div class="toggle-group" data-mkey="health"><button class="toggle-btn" data-val="done">ทำแล้ว</button><button class="toggle-btn" data-val="booked">จองแล้ว</button><button class="toggle-btn" data-val="no">ยัง</button></div></div>
+      <div class="check-row"><label>วิปัสสนา 10 วัน</label><div class="toggle-group" data-mkey="vipassana"><button class="toggle-btn" data-val="done">ไปแล้ว</button><button class="toggle-btn" data-val="booked">จองแล้ว</button><button class="toggle-btn" data-val="no">ยัง</button></div></div>
+      <div class="check-row"><label>Solo retreat เดือนนี้ (ครั้ง)</label><div class="slider-wrap"><input type="range" min="0" max="5" value="0" id="m-solo"><span class="slider-value" id="m-solo-val">0</span></div></div>
+      <div style="margin-top:14px; text-align:center;">
+        <button class="set-btn primary" id="btnSaveMonthly">บันทึกสถิติเดือน</button>
+        <div class="set-label" id="monthlySaveStatus" style="margin-top:10px; min-height:14px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ความย้อนแย้งวันนี้</h2>
+    <div class="tension-section">
+      <p class="tension-prompt">ใจหนึ่งอยากธรรมะ ใจหนึ่งอยากรวย ใจหนึ่งอยากอิสระ<br>วันนี้ใจไหนพูดเสียงดังที่สุด?</p>
+      <input type="range" min="0" max="10" value="5" class="tension-slider" id="tension-slider">
+      <div class="tension-labels"><span>สงบ</span><span>กลางๆ</span><span>พายุ</span></div>
+      <div class="tension-response" id="tension-response"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="save-row">
+      <button class="save-btn" id="saveBtn">บันทึกวันนี้</button>
+      <div class="save-status" id="saveStatus"></div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="quote" id="closingQuote"></p>
+    <p class="note">กระจกนี้เฉพาะคุณ · ข้อมูลเข้ารหัสก่อนออกจากเครื่อง</p>
+  </footer>
+</main>
+
+<!-- SETTINGS OVERLAY -->
+<div class="overlay" id="settingsOverlay">
+  <div class="overlay-card">
+    <div class="overlay-title">ตั้งค่า sync</div>
+    <div class="overlay-sub">Cross-device · เข้ารหัสก่อนส่ง</div>
+    <div id="syncBlockOff" class="set-block">
+      <div class="set-label">ยังไม่ได้เชื่อม cloud · ข้อมูลอยู่ในเครื่องนี้เท่านั้น</div>
+      <input type="password" class="gate-input" id="setupKey" placeholder="JSONBin Master Key" autocomplete="off">
+      <button class="set-btn primary" id="btnSetupConnect">สร้าง bin ใหม่และเริ่ม sync</button>
+      <div class="set-label" style="margin-top:12px; font-size:11px;">ขั้นตอน: สมัครฟรี jsonbin.io → คัดลอก X-Master-Key → วางด้านบน</div>
+      <div id="setupStatus" class="set-label" style="min-height:14px; margin-top:8px;"></div>
+    </div>
+    <div id="syncBlockOn" style="display:none">
+      <div class="set-block">
+        <div class="set-label">Cloud sync · กำลังทำงาน</div>
+        <div class="set-label" style="margin-top:6px;">Bin ID</div>
+        <div class="set-value" id="showBinId"></div>
+        <button class="set-btn" id="btnCopyBin">คัดลอก Bin ID</button>
+        <button class="set-btn" id="btnCopyKey">คัดลอก Master Key</button>
+      </div>
+      <div class="set-block">
+        <div class="set-label">Sync ล่าสุด: <span id="showLastSync">ยังไม่เคย</span></div>
+        <button class="set-btn primary" id="btnSyncNow">Sync ตอนนี้</button>
+        <button class="set-btn danger" id="btnDisconnect">ถอด cloud</button>
+      </div>
+      <div id="syncOpStatus" class="set-label" style="min-height:14px;"></div>
+    </div>
+    <div class="set-block"><button class="set-btn" id="btnCloseSettings">ปิด</button></div>
+  </div>
+</div>
+
+<!-- MISSION EDIT OVERLAY -->
+<div class="overlay" id="missionOverlay">
+  <div class="overlay-card">
+    <div class="overlay-title">จัดการภารกิจ</div>
+    <div class="overlay-sub">เพิ่ม · แก้ไข · ลบ</div>
+    <div id="missionEditList"></div>
+    <div class="set-block">
+      <div class="set-label">เพิ่มภารกิจใหม่</div>
+      <input type="text" class="gate-input" id="newMissionTitle" placeholder="ชื่อภารกิจ">
+      <input type="text" class="gate-input" id="newMissionDesc" placeholder="คำอธิบาย (optional)">
+      <input type="text" class="gate-input" id="newMissionTarget" placeholder="เป้าหมายเวลา เช่น ภายใน Q3 2569 (optional)">
+      <button class="set-btn primary" id="btnAddMission">เพิ่มภารกิจ</button>
+      <div id="missionAddStatus" class="set-label" style="min-height:14px; margin-top:8px;"></div>
+    </div>
+    <div class="set-block">
+      <button class="set-btn" id="btnCloseMissionEdit">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOMEWORK OVERLAY -->
+<div class="overlay" id="homeworkOverlay">
+  <div class="overlay-card">
+    <div class="overlay-title">การบ้านถึงเพื่อน</div>
+    <div class="overlay-sub">สร้าง report → คัดลอก → วางในแชทกับ Claude</div>
+    <div class="hw-tabs">
+      <button class="hw-tab active" data-tab="daily">รายวัน</button>
+      <button class="hw-tab" data-tab="weekly">รายสัปดาห์</button>
+      <button class="hw-tab" data-tab="monthly">รายเดือน</button>
+    </div>
+    <div class="hw-preview" id="hwPreview"></div>
+    <div style="text-align:center; margin-top:14px;">
+      <button class="set-btn primary" id="btnHwCopy">คัดลอก report</button>
+      <button class="set-btn" id="btnHwRefresh">รีเฟรช</button>
+      <button class="set-btn" id="btnHwClose">ปิด</button>
+    </div>
+    <div class="hw-hint" id="hwStatus"></div>
+    <div class="hw-hint" id="hwHintText">
+      Report นี้รวมทุกมุมที่บันทึกไว้ (รวม "ทิศที่ 2" ด้วย) เพื่อให้ผมช่วยวิเคราะห์ได้เต็มที่ · ถ้าอยากตัดออกให้ลบจาก text ก่อน paste
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CRYPTO
+// ============================================================
+const LS_DATA = 'k_data_v2';
+const ITER = 150000;
+const u8ToB64 = u8 => { let s=''; for(let i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); };
+const b64ToU8 = b64 => { const s=atob(b64); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; };
+async function deriveKey(pin, salt) {
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: ITER, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt','decrypt']);
+}
+async function encryptObj(obj, pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pin, salt);
+  const pt = new TextEncoder().encode(JSON.stringify(obj));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, pt);
+  return { salt: u8ToB64(salt), iv: u8ToB64(iv), ct: u8ToB64(new Uint8Array(ct)) };
+}
+async function decryptObj(bundle, pin) {
+  const salt = b64ToU8(bundle.salt);
+  const iv = b64ToU8(bundle.iv);
+  const ct = b64ToU8(bundle.ct);
+  const key = await deriveKey(pin, salt);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let PIN = null;
+let vault = null;
+
+function emptyVault() {
+  return {
+    history: [],                  // daily entries
+    monthly: {},                  // YYYY-MM → {debt,save,passive,health,vipassana,solo,savedAt}
+    missionStatus: {},            // missionId → 'done' | null
+    missions: DEFAULT_MISSIONS.slice(),
+    customStatements: [],
+    cloud: null,
+    createdAt: new Date().toISOString(),
+    version: 3
+  };
+}
+function hasLocalData() { return !!localStorage.getItem(LS_DATA); }
+async function persistLocal() {
+  if (!PIN || !vault) return false;
+  const bundle = await encryptObj(vault, PIN);
+  localStorage.setItem(LS_DATA, JSON.stringify(bundle));
+  return true;
+}
+async function loadLocal(pin) {
+  const raw = localStorage.getItem(LS_DATA);
+  if (!raw) return null;
+  try {
+    const bundle = JSON.parse(raw);
+    const v = await decryptObj(bundle, pin);
+    if (!v.monthly) v.monthly = {};
+    if (!v.missionStatus) v.missionStatus = {};
+    if (!v.missions) v.missions = DEFAULT_MISSIONS.slice();
+    if (!v.customStatements) v.customStatements = [];
+    return v;
+  } catch (e) { return null; }
+}
+function clearLocal() { localStorage.removeItem(LS_DATA); }
+
+// ============================================================
+// CLOUD (JSONBin.io)
+// ============================================================
+const JB = 'https://api.jsonbin.io/v3/b';
+async function jbCreate(masterKey, payload) {
+  const res = await fetch(JB, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Master-Key': masterKey, 'X-Bin-Name': 'krajok-morning', 'X-Bin-Private': 'true' }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error('create failed: ' + res.status);
+  const json = await res.json();
+  return json.metadata.id;
+}
+async function jbUpdate(masterKey, binId, payload) {
+  const res = await fetch(`${JB}/${binId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': masterKey }, body: JSON.stringify(payload) });
+  if (!res.ok) throw new Error('update failed: ' + res.status); return true;
+}
+async function jbRead(masterKey, binId) {
+  const res = await fetch(`${JB}/${binId}/latest`, { headers: { 'X-Master-Key': masterKey } });
+  if (!res.ok) throw new Error('read failed: ' + res.status);
+  const json = await res.json();
+  return json.record;
+}
+
+function mergeVaults(local, remote) {
+  if (!local) return remote; if (!remote) return local;
+  const map = new Map();
+  [...(local.history||[]), ...(remote.history||[])].forEach(e => { const k = e.savedAt || Math.random(); if (!map.has(k)) map.set(k, e); });
+  const history = [...map.values()].sort((a,b) => (a.savedAt||'').localeCompare(b.savedAt||''));
+  const monthly = { ...(remote.monthly||{}), ...(local.monthly||{}) };
+  Object.keys(monthly).forEach(m => {
+    const l = (local.monthly||{})[m]; const r = (remote.monthly||{})[m];
+    if (l && r) monthly[m] = new Date(l.savedAt||0) > new Date(r.savedAt||0) ? l : r;
+  });
+  const missionStatus = { ...(remote.missionStatus||{}), ...(local.missionStatus||{}) };
+  // Missions: prefer local (since user is actively editing), fall back to remote
+  const missions = local.missions && local.missions.length ? local.missions : (remote.missions || DEFAULT_MISSIONS.slice());
+  // Custom statements: union by id
+  const csMap = new Map();
+  [...(remote.customStatements||[]), ...(local.customStatements||[])].forEach(cs => csMap.set(cs.id, cs));
+  const customStatements = [...csMap.values()];
+  return { ...local, ...remote, history, monthly, missionStatus, missions, customStatements, cloud: local.cloud || remote.cloud, createdAt: local.createdAt || remote.createdAt };
+}
+
+async function syncPush() {
+  if (!vault || !vault.cloud || !vault.cloud.key || !vault.cloud.binId) return false;
+  setSyncDot('busy');
+  try { const payload = { cipher: await encryptObj(vault, PIN), updatedAt: new Date().toISOString() }; await jbUpdate(vault.cloud.key, vault.cloud.binId, payload); vault.cloud.lastSyncAt = new Date().toISOString(); await persistLocal(); setSyncDot('on'); return true; }
+  catch (e) { setSyncDot('err'); return false; }
+}
+async function syncPull() {
+  if (!vault || !vault.cloud || !vault.cloud.key || !vault.cloud.binId) return false;
+  setSyncDot('busy');
+  try { const record = await jbRead(vault.cloud.key, vault.cloud.binId); if (record && record.cipher) { const remote = await decryptObj(record.cipher, PIN); vault = mergeVaults(vault, remote); vault.cloud.lastSyncAt = new Date().toISOString(); await persistLocal(); } setSyncDot('on'); return true; }
+  catch (e) { setSyncDot('err'); return false; }
+}
+function setSyncDot(s) { const d = document.getElementById('syncDot'); if (d) d.className = 'sync-ind ' + s; }
+
+// ============================================================
+// GATE FLOW
+// ============================================================
+const screens = { welcome: document.getElementById('screenWelcome'), pin: document.getElementById('screenPin'), restore: document.getElementById('screenRestore') };
+function showScreen(n) { Object.values(screens).forEach(s => s.classList.remove('active')); screens[n].classList.add('active'); }
+let gateMode = 'boot'; let buffer = ''; let setupFirst = ''; let restoreCipher = null;
+
+function renderDots() { document.querySelectorAll('#lockDots .dot').forEach((d,i) => d.classList.toggle('filled', i < buffer.length)); }
+function shakeDots() { const el = document.getElementById('lockDots'); el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 400); }
+function resetBuf() { buffer = ''; renderDots(); }
+function pinStatus(m, c='') { const el = document.getElementById('pinStatus'); el.className = 'gate-status ' + c; el.textContent = m; }
+
+async function handlePinDigit(d) {
+  if (buffer.length >= 4) return;
+  buffer += d; renderDots();
+  if (buffer.length === 4) {
+    const code = buffer;
+    if (gateMode === 'setup1') { setupFirst = code; gateMode = 'setup2'; document.getElementById('pinPrompt').textContent = 'ยืนยันรหัสอีกครั้ง'; setTimeout(resetBuf, 200); }
+    else if (gateMode === 'setup2') {
+      if (code === setupFirst) {
+        pinStatus('กำลังเข้ารหัส...');
+        try { PIN = code; vault = emptyVault(); await persistLocal(); pinStatus('เรียบร้อย','ok'); setTimeout(unlockApp, 300); }
+        catch (e) { pinStatus('ผิดพลาด','err'); gateMode='setup1'; setupFirst=''; document.getElementById('pinPrompt').textContent='ตั้งรหัส 4 หลัก'; setTimeout(resetBuf, 400); }
+      } else { shakeDots(); pinStatus('ไม่ตรงกัน','err'); gateMode='setup1'; setupFirst=''; document.getElementById('pinPrompt').textContent='ตั้งรหัส 4 หลัก'; setTimeout(resetBuf, 400); }
+    }
+    else if (gateMode === 'verify') {
+      pinStatus('กำลังตรวจ...');
+      const v = await loadLocal(code);
+      if (v) { PIN = code; vault = v; pinStatus('ปลดล็อก','ok'); setTimeout(unlockApp, 200); }
+      else { shakeDots(); pinStatus('รหัสไม่ถูกต้อง','err'); setTimeout(resetBuf, 400); }
+    }
+    else if (gateMode === 'restorePin') {
+      pinStatus('กำลังถอดรหัส...');
+      try { const remote = await decryptObj(restoreCipher, code); PIN = code; vault = remote; if (!vault.monthly) vault.monthly = {}; if (!vault.missionStatus) vault.missionStatus = {}; await persistLocal(); pinStatus('ปลดล็อก','ok'); setTimeout(unlockApp, 300); }
+      catch (e) { shakeDots(); pinStatus('PIN ไม่ตรงกับข้อมูลใน cloud','err'); setTimeout(resetBuf, 400); }
+    }
+  }
+}
+
+document.getElementById('numpad').addEventListener('click', e => {
+  const b = e.target.closest('.np-btn'); if (!b) return;
+  if (b.dataset.n !== undefined) handlePinDigit(b.dataset.n);
+  else if (b.dataset.a === 'clear') { resetBuf(); pinStatus(''); }
+  else if (b.dataset.a === 'back') {
+    if (gateMode.startsWith('setup') || gateMode === 'restorePin') {
+      resetBuf(); pinStatus(''); setupFirst=''; restoreCipher=null; showScreen('welcome'); gateMode='pick';
+    }
+  }
+});
+document.getElementById('gateForgot').addEventListener('click', () => {
+  if (confirm('ลบข้อมูลในเครื่องนี้และเริ่มใหม่?')) { clearLocal(); location.reload(); }
+});
+document.getElementById('btnNew').addEventListener('click', () => { gateMode='setup1'; document.getElementById('pinPrompt').textContent='ตั้งรหัส 4 หลัก'; document.getElementById('pinHint').textContent='จดไว้ที่ปลอดภัย ลืม = กู้ไม่ได้'; pinStatus(''); resetBuf(); document.querySelector('.np-btn[data-a="back"]').style.visibility=''; showScreen('pin'); });
+document.getElementById('btnRestore').addEventListener('click', () => { document.getElementById('restoreKey').value=''; document.getElementById('restoreBin').value=''; document.getElementById('restoreStatus').textContent=''; showScreen('restore'); });
+document.getElementById('btnRestoreBack').addEventListener('click', () => showScreen('welcome'));
+document.getElementById('btnRestoreFetch').addEventListener('click', async () => {
+  const key = document.getElementById('restoreKey').value.trim();
+  const bin = document.getElementById('restoreBin').value.trim();
+  const status = document.getElementById('restoreStatus');
+  if (!key || !bin) { status.className='gate-status err'; status.textContent='กรอกทั้ง 2 ช่อง'; return; }
+  status.className='gate-status'; status.innerHTML='<span class="gate-loading"></span>กำลังดึง...';
+  document.getElementById('btnRestoreFetch').disabled = true;
+  try {
+    const record = await jbRead(key, bin);
+    if (!record || !record.cipher) throw new Error('bin empty');
+    restoreCipher = record.cipher; window._restoreCloudCfg = { key, binId: bin };
+    status.className='gate-status ok'; status.textContent='สำเร็จ · ใส่ PIN เดิม';
+    setTimeout(() => { gateMode='restorePin'; document.getElementById('pinPrompt').textContent='ใส่ PIN เดิม 4 หลัก'; document.getElementById('pinHint').textContent='PIN เดียวกับเครื่องเดิม'; pinStatus(''); resetBuf(); document.querySelector('.np-btn[data-a="back"]').style.visibility=''; showScreen('pin'); }, 500);
+  } catch (e) { status.className='gate-status err'; status.textContent='ดึงไม่สำเร็จ · เช็ค Master Key / Bin ID'; }
+  document.getElementById('btnRestoreFetch').disabled = false;
+});
+document.addEventListener('keydown', e => { if (document.body.classList.contains('unlocked')) return; if (!screens.pin.classList.contains('active')) return; if (e.key>='0'&&e.key<='9') handlePinDigit(e.key); else if (e.key==='Backspace'){ resetBuf(); pinStatus(''); } });
+
+function bootGate() {
+  if (hasLocalData()) { gateMode='verify'; document.getElementById('pinPrompt').textContent='ใส่รหัส 4 หลัก'; document.getElementById('pinHint').textContent='เพื่อเปิดกระจก'; document.getElementById('gateForgot').style.display=''; document.querySelector('.np-btn[data-a="back"]').style.visibility='hidden'; showScreen('pin'); }
+  else { gateMode='pick'; showScreen('welcome'); }
+}
+
+function lockApp() { PIN=null; vault=null; document.body.classList.remove('unlocked'); document.body.classList.add('locked'); document.body.classList.remove('storm'); resetBuf(); pinStatus(''); setupFirst=''; document.getElementById('settingsOverlay').classList.remove('show'); document.getElementById('homeworkOverlay').classList.remove('show'); bootGate(); }
+
+async function unlockApp() {
+  if (window._restoreCloudCfg) { vault.cloud = { ...window._restoreCloudCfg, lastSyncAt: new Date().toISOString() }; await persistLocal(); delete window._restoreCloudCfg; }
+  document.body.classList.remove('locked'); document.body.classList.add('unlocked'); resetBuf(); await initApp();
+  if (vault.cloud && vault.cloud.key && vault.cloud.binId) { const ok = await syncPull(); if (ok) { renderTrendAndBanner(); maybeShowDigest(); checkStorm(); renderMonthlyPrompt(); renderMissions(); renderCustomStatements(); } }
+}
+
+// ============================================================
+// MISSIONS DATA
+// ============================================================
+const DEFAULT_MISSIONS = [
+  { id: 'vipassana', title: 'จองวิปัสสนา 10 วัน', desc: 'Goenka / สวนโมกข์ — ประตูโสดาบันที่ยังไม่เคยลองจริง', target: 'ก่อน 26 เม.ย. 2570' },
+  { id: 'health', title: 'ตรวจสุขภาพ Comprehensive', desc: 'รวม colonoscopy — ลำไส้ที่เร่งด่วนเป็นสัญญาณ', target: 'ภายใน Q2 2569' },
+  { id: 'solo', title: 'Solo Retreat ในไทย 3–5 ครั้ง', desc: 'ก่อนตัดสินใจเรื่องที่อยู่หลังที่ 2', target: 'ก่อนเม.ย. 2570' },
+  { id: 'heritage', title: 'Heritage / Boutique Property Project', desc: 'Channel แรงขับสู่โปรเจ็คที่เปิดเผยได้', target: 'เริ่มสำรวจ 2569' },
+  { id: 'deepen', title: 'เลือก 1 คน · ฝึกความลึก', desc: 'ไม่หายไปเดือนที่ 4', target: 'ต่อเนื่อง' },
+  { id: 'human', title: 'หาเพื่อนมนุษย์ที่คุยเรื่องนี้ได้', desc: 'ครูบาอาจารย์ / นักจิตวิทยา', target: 'ภายในปี 2569' }
+];
+
+function getMissions() { return vault && vault.missions && vault.missions.length ? vault.missions : DEFAULT_MISSIONS; }
+
+function renderMissions() {
+  const ml = document.getElementById('missionList');
+  ml.innerHTML = '';
+  const missions = getMissions();
+  if (!missions.length) { ml.innerHTML = '<div style="text-align:center; padding:20px; color:#8B6F47; font-size:13px;">ยังไม่มีภารกิจ · กด "+ แก้ไข" เพิ่มได้</div>'; return; }
+  missions.forEach(m => {
+    const status = vault.missionStatus[m.id];
+    const stepped = state.missionSteps[m.id];
+    const div = document.createElement('div');
+    div.className = 'mission' + (status === 'done' ? ' done' : '');
+    div.innerHTML = `
+      <div class="mission-check ${status==='done'?'done':''}" data-m="${m.id}"></div>
+      <div class="mission-body">
+        <div class="mission-title">${escapeHtml(m.title)}</div>
+        ${m.desc?`<div class="mission-desc">${escapeHtml(m.desc)}</div>`:''}
+        ${m.target?`<span class="mission-target">${escapeHtml(m.target)}</span>`:''}
+        <button class="mission-step-btn ${stepped?'stepped':''}" data-step="${m.id}">${stepped?'✓ ขยับวันนี้':'ขยับ 1 ก้าววันนี้'}</button>
+      </div>`;
+    ml.appendChild(div);
+  });
+  ml.querySelectorAll('.mission-check').forEach(c => {
+    c.addEventListener('click', async () => {
+      const id = c.dataset.m;
+      const cur = vault.missionStatus[id];
+      const next = cur === 'done' ? null : 'done';
+      vault.missionStatus[id] = next;
+      await persistLocal();
+      renderMissions();
+    });
+  });
+  ml.querySelectorAll('.mission-step-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = b.dataset.step;
+      state.missionSteps[id] = !state.missionSteps[id];
+      renderMissions();
+    });
+  });
+}
+
+function escapeHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Initialize vault.missions with defaults if empty
+function ensureMissions() {
+  if (!vault.missions) vault.missions = DEFAULT_MISSIONS.slice();
+}
+
+function renderMissionEditList() {
+  const box = document.getElementById('missionEditList');
+  box.innerHTML = '';
+  const missions = getMissions();
+  missions.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'mission-edit-item';
+    item.innerHTML = `
+      <input type="text" class="gate-input" data-id="${m.id}" data-f="title" value="${escapeHtml(m.title)}" placeholder="ชื่อภารกิจ">
+      <input type="text" class="gate-input" data-id="${m.id}" data-f="desc" value="${escapeHtml(m.desc||'')}" placeholder="คำอธิบาย">
+      <input type="text" class="gate-input" data-id="${m.id}" data-f="target" value="${escapeHtml(m.target||'')}" placeholder="เป้าหมายเวลา">
+      <div class="row">
+        <button class="set-btn primary" data-save="${m.id}">บันทึกแก้ไข</button>
+        <button class="set-btn danger" data-delete="${m.id}">ลบ</button>
+      </div>`;
+    box.appendChild(item);
+  });
+  box.querySelectorAll('[data-save]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.save;
+      ensureMissions();
+      const m = vault.missions.find(x => x.id === id);
+      if (!m) return;
+      box.querySelectorAll(`[data-id="${id}"]`).forEach(inp => { m[inp.dataset.f] = inp.value.trim(); });
+      await persistLocal();
+      renderMissions();
+      const s = document.getElementById('missionAddStatus');
+      s.textContent = 'บันทึกแล้ว';
+      setTimeout(() => s.textContent = '', 1500);
+    });
+  });
+  box.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.delete;
+      if (!confirm('ลบภารกิจนี้?')) return;
+      ensureMissions();
+      vault.missions = vault.missions.filter(x => x.id !== id);
+      delete vault.missionStatus[id];
+      await persistLocal();
+      renderMissions();
+      renderMissionEditList();
+    });
+  });
+}
+
+async function addNewMission() {
+  const title = document.getElementById('newMissionTitle').value.trim();
+  const desc = document.getElementById('newMissionDesc').value.trim();
+  const target = document.getElementById('newMissionTarget').value.trim();
+  const s = document.getElementById('missionAddStatus');
+  if (!title) { s.textContent = 'ต้องกรอกชื่อภารกิจ'; return; }
+  ensureMissions();
+  const id = 'm_' + Date.now();
+  vault.missions.push({ id, title, desc, target });
+  await persistLocal();
+  document.getElementById('newMissionTitle').value = '';
+  document.getElementById('newMissionDesc').value = '';
+  document.getElementById('newMissionTarget').value = '';
+  s.textContent = 'เพิ่มแล้ว';
+  renderMissions();
+  renderMissionEditList();
+  setTimeout(() => s.textContent = '', 1500);
+}
+
+// ============================================================
+// APP STATE + CONTENT
+// ============================================================
+const state = {
+  mirrors: {}, shadow_pull: 0, tension: 5,
+  commits: [],
+  missionSteps: {},
+  multi: { shadow:[], nearmiss:[], hurts:[], merits:[], beauty:[], gratitude:[], mood:[], statements:[], afterfeel:[], cost:[] },
+  single: { karma:null, mortality:null, world2:null, metaphor:null, gaze:null, leans:null, toRelease:null }
+};
+
+const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const thaiDays = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+const normalQuestions = [
+  "คุณตื่นวันนี้ด้วยความอยากอะไรเป็นอย่างแรก — แล้วมันพาคุณไปทางไหน?",
+  "ถ้าวันนี้คือวันสุดท้ายที่ภรรยายังไม่รู้ความจริง คุณจะใช้วันนี้ยังไง?",
+  "ความดีของภรรยาเป็นของขวัญ หรือกลายเป็นกรง?",
+  "วันนี้คุณจะเลือก \"ลึก\" หรือ \"กว้าง\"?",
+  "ลองนึกภาพคุณตอน 70 — เขามีรอยยิ้มแบบไหน?",
+  "ถ้า AI หายพรุ่งนี้ คุณจะคุยเรื่องในใจกับใคร?",
+  "ความตื่นเต้นที่ตามหา ต่างจากความสุขจริงตรงไหน?",
+  "คุณเบื่อคนเร็ว — วันนี้ลองอยู่กับใครสักคนนานกว่าที่เคย",
+  "ศีล 5 ข้อไหนที่ \"เกือบ\" ผิดเมื่อวาน?",
+  "ถ้าคุณไม่ได้เกิดมาดีขนาดนี้ คุณจะเป็นคนแบบไหน?",
+  "สิ่งที่คุณเรียกว่า \"อิสระ\" กับ \"การหลบหนี\" ต่างกันตรงไหน?",
+  "ถ้ามีคนเดินมาบอก \"ฉันรู้ความลับคุณ\" คุณจะตอบยังไง?",
+  "บุญที่คุณมีมาก — วันนี้คุณเพิ่มหรือใช้?",
+  "ถ้าเขียน epitaph ตัวเอง 1 ประโยคตอนนี้ จะเขียนว่ายังไง?",
+  "วันนี้คนสนิทขออะไรเงียบๆ ไหม?",
+  "\"ตัวตนที่ 2\" คือตัวตนแรก หรือคือเงาของมัน?",
+  "10 ปีก่อน คุณคงอิจฉาคุณวันนี้ — แล้วทำไมยังไม่พอ?",
+  "มี 1 เรื่องที่ควรคุยกับพระสักรูป — คุณรู้ว่าเรื่องอะไร",
+  "ถ้าชาติหน้าคุณกลับมาเป็นคนที่คุณแอบพบวันนี้ อยากถูกปฏิบัติยังไง?",
+  "Infinity freedom คือทำอะไรก็ได้ หรือ \"ไม่ต้องการทำอะไร\"?",
+  "ร่างกายพยายามบอกอะไรเรื่องลำไส้?",
+  "วันนี้ให้บริวารตัดสินใจแทนคุณสักเรื่องไหม?",
+  "คืนนี้จะนอนในห้องของคุณ หรือห้องของใจคุณ?",
+  "\"โสดาบัน\" กับ \"เจ้าของคนได้หลายคน\" สมดุลกันได้จริงหรือ?",
+  "เวลาถามว่า \"กูทำแบบนี้ผิดหรือเปล่าวะ\" — ใครตอบ?",
+  "วันนี้มีอะไรที่ \"ซื้อได้\" แต่เลือกไม่ซื้อ?",
+  "ภรรยารักคุณเพราะคุณดี หรือเพราะเธอดี?",
+  "มีคน 1 คนที่ถ้าคุณหาย เขาจะเสียใจจริง — วันนี้ทักเขาไหม?",
+  "ถ้าผู้หญิงที่คุณแอบพบ คือน้องสาวคุณ คุณอยากให้ชายคนนั้นปฏิบัติเธอยังไง?",
+  "\"low profile\" ของคุณ — คือความถ่อมตัว หรือการซ่อน?"
+];
+const stormQuestions = [
+  "วันนี้ยาก — ยอมรับว่ายาก คือคำตอบ",
+  "ไม่ต้องแก้อะไรวันนี้ แค่อยู่ให้ถึงพรุ่งนี้",
+  "ใจที่พายุไม่บอกความจริง — รอให้นิ่งก่อนค่อยฟัง",
+  "วันนี้ไม่ต้องเก่ง ไม่ต้องตัดสินใจ ไม่ต้องเข้าใจ — แค่หายใจ",
+  "หายใจเข้า 4 · หยุด 7 · ออก 8 · แค่นี้พอสำหรับวันนี้",
+  "ความอยากวันพายุคือเสียงที่โกหกที่สุด — ให้มันผ่านไป",
+  "ไม่มีการตัดสินใจใดที่ดีพอตอนพายุ — พรุ่งนี้ค่อยคิด",
+  "ขอให้คุณให้ความกรุณากับตัวเองวันนี้ เหมือนที่คุณจะให้เพื่อนที่กำลังเจ็บ"
+];
+const quotes = [
+  "ความสุขที่ตามหา ไม่ได้อยู่ในทิศที่ 2 — อยู่ในการกล้าอยู่กับทิศแรกอย่างลึกซึ้ง",
+  "คนที่หนีตัวเองไปหาสิ่งใหม่เรื่อยๆ คือคนที่ยังไม่เคยอยู่กับตัวเองนานพอ",
+  "ทางสายธรรมะกับทางทิศที่ 2 เดินด้วยกันไม่ได้",
+  "ของขวัญที่ดีที่สุดของชาตินี้ คือเวลาที่ยังเหลือ",
+  "Infinity freedom คือการไม่ต้องการอะไรจากภายนอก",
+  "คนเงินเยอะ เวลาเยอะ แต่เพื่อนแท้ไม่มี คือคนเสี่ยงที่สุด",
+  "คุณไม่ได้ขาดอะไร — แค่ยังไม่เคยอยู่ลึกพอให้รู้สึกเต็ม"
+];
+
+// FRIEND QUOTES (นิ้วกลม style — worldly)
+const friendQuotes = [
+  "คนที่สำเร็จแล้วมักถามคำถามเดิม — 'แล้วไงต่อ?' คำตอบไม่ได้อยู่ที่ข้างนอก อยู่ในคำถามนั้นเอง",
+  "เราสะสมสิ่งต่างๆ เพื่อรู้สึกปลอดภัย แต่สิ่งที่เราสะสมมากที่สุดคือความกลัวว่ามันจะหาย",
+  "เวลาเบื่อคน อาจไม่ใช่เพราะเขาน่าเบื่อ แต่เพราะเราไม่ได้ฟังเขาอีกต่อไป",
+  "คนที่เก่งที่สุด คือคนที่รู้ว่าตัวเองไม่ได้เก่งที่สุด",
+  "ความรวยที่แท้ ไม่ใช่การมีทุกอย่าง แต่คือการไม่ต้องการทุกอย่าง",
+  "เราหนีความเจ็บในใจ ด้วยการหาความเจ็บใหม่มาทดแทน — เหมือนสลัดหมัดแต่เพิ่มแผล",
+  "ความเหงาไม่ได้หายไปตอนมีคนอยู่ด้วย — มันหายตอนเราอยู่กับตัวเองได้",
+  "เราให้คุณค่ากับสิ่งที่หายาก แต่ลืมว่าเวลาเองก็หายาก",
+  "คำตอบที่เรากลัวที่สุด มักเป็นคำตอบที่ตรงที่สุด",
+  "ความเจ้าชู้ ไม่ใช่การรักหลายคน แต่คือการไม่กล้ารักใครจริงๆ",
+  "ถ้าชีวิตคือการเดินทาง destination ไม่ใช่ที่หมาย แต่คือคนที่เราเป็นเมื่อไปถึง",
+  "บางทีสิ่งที่เรียกว่า 'อิสระ' คือความไม่กล้ายอมรับว่าเราต้องการใคร",
+  "เรามักบอกตัวเองว่าจะเปลี่ยน วันจันทร์ ปีใหม่ หลังเกษียณ — แล้วไม่เคยเปลี่ยน เพราะวันนี้ไม่เคยมา",
+  "เราเบื่อเพราะเราไม่สนใจอะไรพอ ไม่ใช่เพราะไม่มีอะไรน่าสนใจ",
+  "คนที่ low profile จริงๆ ไม่รู้ตัวว่าเป็น low profile",
+  "เวลาเราโกรธใคร ที่จริงเรากำลังโกรธตัวเองผ่านเขา",
+  "ความสำเร็จที่ไม่มีใครเห็น คือความสำเร็จที่แท้จริง",
+  "เราอยู่ในโลกที่คนถาม 'สบายดีไหม' แต่ไม่เคยหยุดฟังคำตอบ",
+  "คนที่เราอยากเป็นเมื่อ 10 ปีก่อน คือคนที่เรากำลังเป็นตอนนี้ — แล้วทำไมยังไม่พอ?",
+  "ถ้ายังมีอะไรทำให้เราตื่นเต้น แสดงว่าเรายังไม่ตาย · ถ้ามีทุกสิ่ง นั่นต่างหากที่น่ากลัว",
+  "เงินซื้อได้หลายอย่าง ยกเว้นการรู้ว่า 'พอ'",
+  "ความเก่งที่ซ่อน บางทีคือการกลัวว่าถ้าเปิดแล้วจะไม่พิเศษ",
+  "ความเหงาของคนเก่ง ไม่ใช่ว่าไม่มีใคร แต่คือไม่มีใครที่เก่งพอจะเข้าใจ",
+  "คนที่อยากเป็นเจ้าของคนอื่น คือคนที่ยังไม่เคยเป็นเจ้าของตัวเอง",
+  "เราหาคำตอบทุกวัน แต่ลืมว่าบางคำถามไม่ได้ต้องการคำตอบ มันต้องการเวลา",
+  "ถ้าความลับของคุณหนักขนาดที่ต้องเก็บมันคนเดียว มันคงไม่ใช่ความลับเล็กๆ",
+  "ความอิสระที่แท้ ไม่ใช่การทำอะไรก็ได้ แต่คือการไม่ต้องการทำอะไรเลย แล้วสบายใจ",
+  "เราใช้ 20 ปีสร้างความสำเร็จ แล้ว 20 ปีถัดไปหาความหมาย — อย่าสับลำดับ",
+  "บางทีคำตอบที่เรามองหา คือการหยุดมองหา",
+  "ทุกความสัมพันธ์มี expiration date — เราแค่ไม่รู้ว่าเมื่อไหร่ เลยควรจริงใจวันนี้"
+];
+
+// MONK QUOTES (ว. วชิรเมธี / ไพศาล วิสาโล style — dharma)
+const monkQuotes = [
+  "ทุกข์ไม่ใช่ศัตรู · คือครูคนแรกที่พาเราเข้าหาทางพ้นทุกข์",
+  "เราเกิดมาไม่ได้เอาอะไรมา · จะเอาอะไรไปก็ไม่ได้ · เหลือแต่กรรมที่ทำไว้",
+  "โลภ โกรธ หลง ไม่ใช่ศัตรู เป็นเพื่อนเก่า · รู้จักเขาให้ชัด อย่ากลัว อย่าต่อต้าน แค่เห็น",
+  "ความสุขไม่ได้อยู่ที่ได้ตามใจ · แต่อยู่ที่ใจไม่ต้องการอะไรตาม",
+  "อัตตาคือกำแพงที่เรายกขึ้นปิดตัวเอง",
+  "จิตที่ดูตัวเองได้ ไม่มีใครทำร้ายได้",
+  "ทุกลมหายใจที่รู้ตัว คือการเกิดใหม่ครั้งเล็กๆ",
+  "อย่าเชื่อความคิดของตัวเองทั้งหมด · มันเกิดจากเหตุ ดับโดยเหตุ ไม่ใช่เรา",
+  "สิ่งที่เรียกว่า 'ตัวตนของเรา' คือเพียงกระแสของขันธ์ 5 ที่เกิดดับตลอดเวลา",
+  "โลภไม่ได้แย่ · มันเพียงบอกเราว่า 'ภายในยังว่างอยู่ตรงไหน'",
+  "การรักษาศีล ไม่ใช่การบังคับตัวเอง · แต่คือการให้ของขวัญแก่คนอื่น",
+  "ความกลัวสูญเสียใหญ่กว่าความสูญเสียเอง · คนเราจึงเจ็บปวดในใจมากกว่าในชีวิตจริง",
+  "อิสระที่แท้ คือไม่ถูกผูกโดยความอยาก · และไม่ถูกผูกโดยความไม่อยาก",
+  "ความดีที่ทำโดยไม่ให้ใครรู้ มีพลังกว่าความดีที่อวด",
+  "ความสำเร็จทางโลกที่ไม่ได้ไถ่ตัวเอง · คือความล้มเหลวทางธรรม",
+  "ชาตินี้เป็นผลของชาติก่อน · ชาติหน้าเป็นผลของชาตินี้ · เลือกวันนี้ให้ดี",
+  "การปล่อยวาง ไม่ใช่การไม่แคร์ · แต่คือการแคร์แบบไม่ยึด",
+  "เวลาที่เราวิ่งตามกาม มันวิ่งหนีเรา · เวลาที่เราหยุด มันก็หยุดไปด้วย",
+  "ร่างกายนี้ไม่ใช่ของเรา · ยืมโลกมาใช้ชั่วคราว · ใช้ให้ดี แล้วคืนให้เรียบร้อย",
+  "ผู้ที่เห็นทุกข์ได้ครบ คือผู้ที่เริ่มพ้นทุกข์",
+  "ความเหงา คือใจที่ยังหาคนอยู่ แทนที่จะหาตัวเองก่อน",
+  "คนที่มีทุกอย่าง ยังทุกข์ · เพราะไม่รู้ว่าจะเอาไปไหน",
+  "ความเจ้าชู้ ไม่ใช่การรักมาก · แต่คือการไม่รู้จักความรัก",
+  "ใจที่ฝึกดีแล้ว · รับทุกข์ได้โดยไม่ทุกข์ · รับสุขได้โดยไม่เพลิน",
+  "ธรรมะไม่ได้อยู่ในวัด · อยู่ในใจที่ตื่น",
+  "อย่ารอใช้ชีวิตตอนเกษียณ · เกษียณคือสิ่งที่ต้องทำเดี๋ยวนี้ในใจ",
+  "เวลาที่ไม่ได้มีสติ คือเวลาที่เราไม่ได้เกิด",
+  "ความลับในใจ เป็นเชือกที่ผูกเราไว้กับอดีต · ปล่อยได้เมื่อไหร่ เบาเมื่อนั้น",
+  "สมาธิไม่ใช่การทำให้ใจว่าง · แต่คือการดูใจโดยไม่เติมอะไรเข้าไป",
+  "ก่อนตายเรานอนบนเตียงคนเดียว ไม่มีใครตามไปได้ · ฝึกอยู่กับตัวเองตั้งแต่วันนี้"
+];
+
+// LABELS for reports
+const LBL = {
+  shadow: { greed:'อยากได้อีก (โลภ)', lust:'อยากเสพ (โลภ)', own:'อยากครอง (โลภ)', ego:'อยากเด่น (โลภ)', anger:'ฉุน (โกรธ)', compete:'แข่งเอาชนะ (โกรธ)', judge:'ตัดสินคน (โกรธ)', block:'กั้นไม่ให้เข้า (โกรธ)', delude:'หลงตัวตน (หลง)', mask:'สวมหน้ากาก (หลง)', attach:'ผูกพันยึดติด (หลง)', confuse:'สับสน (หลง)' },
+  mood: { letgo:'ปล่อยวาง', sad:'เศร้า', hot:'ร้อน', deceive:'หลอก', void:'ว่าง', kind:'กรุณา', anger:'โกรธ', hide:'ซ่อน', calm:'สงบ', mask:'สวมหน้ากาก', honest:'ซื่อ', lonely:'เหงา', light:'เบา', erupt:'ปะทุ', flow:'ไหล', heavy:'หนัก' },
+  nearmiss: { pull:'แรงกระซิบ', lie:'โกหก', greedy:'โลภ', angry:'ฉุน', hidden:'แอบ', cheat:'หลอก', gossip:'นินทา', none:'ไม่มี' },
+  merits: { callparent:'ทักพ่อแม่', give:'ให้ทาน', smile:'ยิ้ม', forgive:'อโหสิ', calm:'ไม่โกรธตอบ', help:'ช่วยคน', chant:'สวดมนต์', sit:'นั่งสมาธิ', letgo:'ปล่อยวาง', bow:'กราบ', listen:'ฟัง', praise:'ชม' },
+  gratitude: { home:'บ้าน', family:'ครอบครัว', wife:'ภรรยา', work:'งาน', wealth:'เงิน', friends:'เพื่อน', teacher:'ครูอาจารย์', nation:'ประเทศไทย', knowledge:'ความรู้', freedom:'เสรีภาพ', health:'สุขภาพ', ai:'AI' },
+  beauty: { arch:'สถาปัตยกรรม', nature:'ธรรมชาติ', face:'ใบหน้า', art:'ศิลปะ', history:'ประวัติศาสตร์', light:'แสง', dialog:'บทสนทนา', sound:'เสียง', space:'พื้นที่', word:'คำ', idea:'ความคิด', miss:'ไม่ทันเห็น' },
+  hurts: { wife:'ภรรยา', parents:'พ่อแม่', staff:'คนงาน', partner:'คู่ค้า', stranger:'คนแปลก', self:'ตัวเอง', none:'ไม่มี' },
+  karma: { light:'วันเบา', haze:'มีหมอก', ripen:'รู้สึกสุก', accumul:'กำลังสะสม' },
+  mortality: { ready:'พร้อม', adjust:'ปรับได้', notyet:'ยังไม่', avoid:'ไม่กล้าคิด' },
+  world2: { far:'ห่าง', normal:'ปกติ', close:'ใกล้', tooclose:'ใกล้เกิน' },
+  metaphor: { peak:'ยอดเขา', abyss:'เหว', path:'ทางเดิน', wave:'คลื่น', island:'เกาะ', tree:'ต้นไม้', bird:'นก', key:'กุญแจ', lock:'ปิดกุญแจ', fire:'ไฟ', drop:'หยดน้ำ', sprout:'หน่อ' },
+  statements: { still_good:'ยังดีอยู่', missed:'พลาดบางอย่าง', tooproud:'เก่งเกินไป', lonely:'เหงา', wantrun:'อยากหลบหนี', wanthold:'อยากถูกโอบกอด', wantbe_other:'อยากเป็นคนอื่น', wantbe_self:'อยากเป็นตัวเอง', see_dharma:'เห็นธรรม', feel_karma:'รู้สึกมีกรรม', grateful:'สำนึกบุญคุณ', sorry:'ขอโทษเงียบๆ', tired:'เหนื่อย', peace:'สงบพอ' },
+  leans: { lobha:'โลภ อยากเพิ่ม', dosa:'โกรธ อยากผลัก', moha:'หลง อยากลืม', balanced:'ไม่เอน สมดุล' },
+  toRelease: { want:'ลดการอยากได้', win:'ลดการเอาชนะ', mask:'ลดการสวมหน้ากาก', hide:'ลดความลับ' },
+  gaze: { still:'สงบ ไม่ลอย', flash:'แว้บผ่านไป', linger:'ลอยนาน', flame:'ไฟลุก' },
+  afterfeel: { light:'เบาใจ', guilt:'ผิดในใจ', loop:'วนต้องการอีก', emptier:'ว่างกว่าเดิม', other:'เหมือนเป็นคนอื่น', tired:'เหนื่อย', none:'ไม่เกิดช่วงนี้' },
+  cost: { time:'เวลา', focus:'สมาธิ', honesty:'ความซื่อกับภรรยา', peace:'ใจสงบ', self:'ความซื่อกับตัวเอง', sila:'ศีล', karma:'กรรม', none:'ไม่มี' },
+  mirrors: { sila:{yes:'ครบ',almost:'เกือบ',no:'ยังไม่'}, med:{no:'ยัง',short:'5-15น.',long:'20+น.'}, truth:{yes:'จริง',mixed:'ครึ่งๆ',no:'หลอก'}, move:{none:'ไม่ได้',little:'<20น.',good:'30+น.'}, gut:{ok:'โอเค',rush:'เร่งด่วน',bad:'ผิดปกติ'}, food:{yes:'ครบ',partial:'บางส่วน',no:'ไม่'}, focus:{yes:'ใช่',scattered:'กระจาย',no:'ไม่ได้ทำ'}, spend:{need:'จำเป็น',mixed:'กลางๆ',escape:'เพื่อหนี'}, wife:{yes:'ใช่',abit:'นิดหน่อย',no:'ไม่เลย'}, parents:{yes:'ทัก',no:'ยัง'}, friend:{yes:'ติดต่อ',no:'ยัง'} },
+  commits: { sit:'นั่งสมาธิ', move:'ขยับ', water:'ดื่มน้ำ', dharma:'อ่านธรรม', wife:'ทักภรรยา', parents:'ทักพ่อแม่', chant:'สวดพุทโธ', sun:'ออกแดด/ธรรมชาติ', exercise:'ออกกำลังจริง', eatslow:'กินช้ามีสติ', phoneoff:'พักจากมือถือ', thanks:'ขอบคุณใคร' },
+  mStatus: { done:'เสร็จ', progress:'กำลังทำ', stuck:'ติด', null:'ยังไม่ขยับ' }
+};
+
+function renderDate() { const now = new Date(); document.getElementById('date').textContent = `วัน${thaiDays[now.getDay()]}ที่ ${now.getDate()} ${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`; }
+function renderCountdown() {
+  const now = new Date();
+  const b40 = new Date(2027,3,26); const bd = new Date(1987,3,26);
+  const ee = new Date(bd.getFullYear()+90, bd.getMonth(), bd.getDate());
+  const dtr = Math.max(0, Math.ceil((b40 - now)/86400000));
+  const ay = ((now - bd)/(365.25*86400000)).toFixed(2);
+  const dl = Math.max(0, Math.floor((ee - now)/86400000));
+  document.getElementById('countdown').innerHTML = `<div class="count-block"><span class="count-number">${dtr.toLocaleString()}</span><span class="count-label">วันก่อน 40</span></div><div class="count-block"><span class="count-number">${ay}</span><span class="count-label">อายุวันนี้</span></div><div class="count-block"><span class="count-number">${dl.toLocaleString()}</span><span class="count-label">วันที่คาดเหลือ</span></div>`;
+}
+
+function bindInteractions() {
+  document.querySelectorAll('.toggle-group[data-key]').forEach(g => { if (g.dataset.bound) return; g.dataset.bound='1'; g.addEventListener('click', e => { const btn=e.target.closest('.toggle-btn'); if (!btn) return; g.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); state.mirrors[g.dataset.key]=btn.dataset.val; }); });
+  document.querySelectorAll('[data-multi]').forEach(g => { if (g.dataset.bound) return; g.dataset.bound='1'; const key=g.dataset.multi; g.addEventListener('click', e => { const t=e.target.closest('.tile'); if (!t) return; t.classList.toggle('on'); if (t.classList.contains('on')) { if (!state.multi[key].includes(t.dataset.v)) state.multi[key].push(t.dataset.v); } else { state.multi[key] = state.multi[key].filter(v => v !== t.dataset.v); } }); });
+  document.querySelectorAll('[data-single]').forEach(g => { if (g.dataset.bound) return; g.dataset.bound='1'; const key=g.dataset.single; g.addEventListener('click', e => { const t=e.target.closest('.big-tile'); if (!t) return; g.querySelectorAll('.big-tile').forEach(b => b.classList.remove('on')); t.classList.add('on'); state.single[key]=t.dataset.v; }); });
+  document.querySelectorAll('[data-commits]').forEach(g => { if (g.dataset.bound) return; g.dataset.bound='1'; g.addEventListener('click', e => { const t=e.target.closest('.commit-tile'); if (!t) return; t.classList.toggle('on'); const v=t.dataset.v; if (t.classList.contains('on')) { if (!state.commits.includes(v)) state.commits.push(v); } else { state.commits = state.commits.filter(x => x !== v); } }); });
+
+  const sleepS = document.getElementById('sleep-slider'), sleepV = document.getElementById('sleep-val');
+  if (sleepS && !sleepS.dataset.bound) { sleepS.dataset.bound='1'; sleepS.addEventListener('input', e => { sleepV.textContent=e.target.value; state.mirrors.sleep=parseInt(e.target.value); }); state.mirrors.sleep=parseInt(sleepS.value); }
+  const shadowS = document.getElementById('shadow-slider'), shadowV = document.getElementById('shadow-val');
+  if (shadowS && !shadowS.dataset.bound) { shadowS.dataset.bound='1'; shadowS.addEventListener('input', e => { shadowV.textContent=e.target.value; state.shadow_pull=parseInt(e.target.value); }); }
+  const tS = document.getElementById('tension-slider'), tR = document.getElementById('tension-response');
+  if (tS && !tS.dataset.bound) { tS.dataset.bound='1'; const tr=["สงบดี — วันที่ใจไม่พายุ คือวันที่ควรลงลึกขึ้นอีกขั้น ลองนั่ง 20 นาที","มีเสียงในใจหลายฝั่ง — ลองฟังเงียบๆ 5 นาทีโดยไม่ตัดสิน","พายุแรง — อย่าเพิ่งตัดสินใจเรื่องใหญ่วันนี้ ออกไปเดิน 1 ชั่วโมง"]; const upd = v => { v=parseInt(v); state.tension=v; tR.textContent = v<=3?tr[0]:v<=7?tr[1]:tr[2]; }; upd(tS.value); tS.addEventListener('input', e => upd(e.target.value)); }
+
+  // Monthly sliders
+  ['m-debt','m-save','m-passive','m-solo'].forEach(id => { const s=document.getElementById(id); const v=document.getElementById(id+'-val'); if (s && !s.dataset.bound) { s.dataset.bound='1'; s.addEventListener('input', e => v.textContent=e.target.value); } });
+  document.querySelectorAll('.toggle-group[data-mkey]').forEach(g => { if (g.dataset.bound) return; g.dataset.bound='1'; g.addEventListener('click', e => { const btn=e.target.closest('.toggle-btn'); if (!btn) return; g.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }); });
+}
+
+function renderTrend() {
+  const container = document.getElementById('shadowTrend');
+  const history = [...(vault.history||[])].reverse();
+  const bars = new Array(14).fill(null);
+  const recent = history.slice(0,14).reverse();
+  recent.forEach((h,i) => bars[14-recent.length+i] = h.shadow_pull ?? null);
+  container.innerHTML = bars.map(v => { if (v===null||v===undefined) return `<div class="trend-bar empty" style="height:3px"></div>`; const pct=Math.max(6,(v/10)*100); const cls=v>=7?'high':v>=4?'medium':'low'; return `<div class="trend-bar ${cls}" style="height:${pct}%" title="${v}"></div>`; }).join('');
+}
+
+function analyzeAndBanner() {
+  const now = new Date();
+  const banner = document.getElementById('banner');
+  banner.className = 'banner'; banner.innerHTML = '';
+  const lv = document.getElementById('lastVisit');
+  const history = [...(vault.history||[])].reverse();
+  if (!history.length) { lv.textContent='เริ่มต้นครั้งแรก'; return; }
+  const latest = history[0]; const ld = new Date(latest.savedAt||0);
+  const ds = Math.floor((now - ld)/86400000);
+  lv.textContent = ds===0?'บันทึกล่าสุด: วันนี้':ds===1?'บันทึกล่าสุด: เมื่อวาน':`บันทึกล่าสุด: ${ds} วันก่อน`;
+
+  const last5 = history.slice(0,5).map(h => h.shadow_pull).filter(v => typeof v==='number');
+  if (last5.length>=3) { const avg=last5.reduce((a,b)=>a+b,0)/last5.length; const hc=last5.filter(v=>v>=6).length; if (avg>=6||hc>=3) { banner.className='banner amber'; banner.innerHTML=`<strong>สังเกต</strong>เงาภายในสูงต่อเนื่อง ${last5.length} วันล่าสุด (เฉลี่ย ${avg.toFixed(1)}/10) — อย่าเพิ่งตัดสินใจเรื่องใหญ่`; return; } }
+  const w2 = history.slice(0,5).map(h => h.single && h.single.world2).filter(Boolean);
+  if (w2.filter(v => v==='tooclose').length>=2) { banner.className='banner amber'; banner.innerHTML=`<strong>สังเกต</strong>ทิศที่ 2 "ใกล้เกิน" มาหลายวัน — โทรหาเพื่อนมนุษย์ ไม่ใช่ AI`; return; }
+  if (ds>=4) { banner.className='banner dim'; banner.innerHTML=`<strong>หายไป ${ds} วัน</strong>ไม่ต้องรู้สึกผิด — กลับมามองกระจกเงียบๆ วันนี้พอ`; }
+}
+function renderTrendAndBanner() { renderTrend(); analyzeAndBanner(); }
+
+function checkStorm() {
+  const history = [...(vault.history||[])].reverse();
+  const last3 = history.slice(0,3).map(h => h.tension).filter(v => typeof v==='number');
+  const on = last3.length>=3 && last3.every(v => v>=7);
+  const now = new Date();
+  const doy = Math.floor((now - new Date(now.getFullYear(),0,0))/86400000);
+  document.body.classList.toggle('storm', on);
+  if (on) { const b=document.getElementById('banner'); if (!b.className.includes('amber')) { b.className='banner storm'; b.innerHTML=`<strong>โหมดพายุ</strong>ความย้อนแย้งสูงต่อเนื่อง 3 วัน`; } document.getElementById('questionHeader').textContent='คำถามวันพายุ'; document.getElementById('dailyQuestion').textContent=stormQuestions[doy%stormQuestions.length]; }
+  else { document.getElementById('questionHeader').textContent='คำถามเช้านี้'; document.getElementById('dailyQuestion').textContent=normalQuestions[doy%normalQuestions.length]; }
+  document.getElementById('closingQuote').textContent = quotes[doy%quotes.length];
+  const fq = document.getElementById('quoteFriend'); if (fq) fq.textContent = friendQuotes[doy%friendQuotes.length];
+  const mq = document.getElementById('quoteMonk'); if (mq) mq.textContent = monkQuotes[doy%monkQuotes.length];
+}
+
+function breathCycle() { const stage=document.getElementById('breathStage'); if (!stage||stage.dataset.started) return; stage.dataset.started='1'; const labels=[{t:'หายใจเข้า',d:4000},{t:'หยุด',d:7000},{t:'หายใจออก',d:8000}]; let i=0; (function n(){ stage.textContent=labels[i].t; setTimeout(() => { i=(i+1)%labels.length; n(); }, labels[i].d); })(); }
+
+// ============================================================
+// DIGEST (weekly)
+// ============================================================
+function buildDigest() {
+  const now = new Date();
+  const history = [...(vault.history||[])].reverse();
+  const cutoff = now.getTime() - 7*86400000;
+  const week = history.filter(h => new Date(h.savedAt||0).getTime() >= cutoff);
+  if (week.length < 1) return null;
+  const avgS = (week.map(h=>h.shadow_pull).filter(v=>typeof v==='number').reduce((a,b)=>a+b,0)/week.length) || 0;
+  const avgT = (week.map(h=>h.tension).filter(v=>typeof v==='number').reduce((a,b)=>a+b,0)/week.length) || 0;
+  const count = key => { const m={}; week.forEach(h => (h.multi && h.multi[key] || []).forEach(v => m[v]=(m[v]||0)+1)); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
+  const tS = count('shadow').slice(0,3), tM = count('mood').slice(0,3), tN = count('nearmiss').slice(0,3), tMer = count('merits').slice(0,5), tG = count('gratitude').slice(0,5);
+  const w2 = week.map(h => h.single && h.single.world2).filter(Boolean); const w2c = w2.filter(v => v==='close'||v==='tooclose').length;
+  const mds = new Set(); week.forEach(h => Object.entries(h.missions||{}).forEach(([k,v]) => { if (v) mds.add(k); }));
+  const pill = (arr, dict) => arr.map(([k,c]) => `<span class="pill">${dict[k]||k} · ${c}</span>`).join('');
+  let refl = '';
+  if (avgS>=6) refl='สัปดาห์ที่เงาภายในสูง — ใจกำลังสื่อสารอะไรอยู่ ฟังให้ครบก่อนตอบ';
+  else if (avgS<=3 && week.length>=4) refl='สัปดาห์ที่ใจนิ่งดี — ใช้ช่วงนี้ลงลึกในธรรมะ ไม่ใช่ปล่อยผ่าน';
+  else if (w2c>=3) refl='ทิศที่ 2 ใกล้หลายวันในสัปดาห์นี้ — ก่อนทำการใดให้นั่งกับตัวเอง 30 นาทีก่อน';
+  else if (mds.size===0) refl='ภารกิจยังไม่ขยับเลยสัปดาห์นี้ — เลือก 1 ข้อเล็กที่สุด ทำสัปดาห์หน้า';
+  else refl='สัปดาห์ที่ผ่านมาเดินอย่างมีสติพอประมาณ — คำถาม: อะไรที่คุณซ้ำให้ตัวเองแล้วยังไม่ฟัง?';
+  return `<div class="digest-title">สรุปสัปดาห์ที่ผ่านมา</div><div class="digest-sub">Weekly Digest · ${week.length} วันที่บันทึก</div><div class="digest-grid"><div class="digest-stat"><div class="digest-num">${week.length}/7</div><div class="digest-lab">วันบันทึก</div></div><div class="digest-stat"><div class="digest-num">${avgS.toFixed(1)}</div><div class="digest-lab">เงาภายในเฉลี่ย</div></div><div class="digest-stat"><div class="digest-num">${avgT.toFixed(1)}</div><div class="digest-lab">ย้อนแย้งเฉลี่ย</div></div></div>${tS.length?`<div class="digest-section"><div class="digest-h">เงาที่ขึ้นบ่อย</div><div class="digest-p">${pill(tS,LBL.shadow)}</div></div>`:''}${tM.length?`<div class="digest-section"><div class="digest-h">อารมณ์สัปดาห์</div><div class="digest-p">${pill(tM,LBL.mood)}</div></div>`:''}${tN.length?`<div class="digest-section"><div class="digest-h">ที่ "เกือบ" พลาด</div><div class="digest-p">${pill(tN,LBL.nearmiss)}</div></div>`:''}${tMer.length?`<div class="digest-section"><div class="digest-h">บุญเล็กๆ ที่ทำ</div><div class="digest-p">${pill(tMer,LBL.merits)}</div></div>`:''}${tG.length?`<div class="digest-section"><div class="digest-h">ขอบคุณ</div><div class="digest-p">${pill(tG,LBL.gratitude)}</div></div>`:''}<div class="digest-reflect">${refl}</div>`;
+}
+
+function maybeShowDigest() {
+  const digest = document.getElementById('digest'); const toggle = document.getElementById('digestToggle');
+  const html = buildDigest();
+  if (!html) { digest.classList.remove('show'); toggle.style.display='none'; return; }
+  const now = new Date(); const isSun = now.getDay()===0;
+  if (isSun) { digest.innerHTML = html; digest.classList.add('show'); }
+  else { toggle.style.display=''; toggle.onclick = () => { if (digest.classList.contains('show')) { digest.classList.remove('show'); toggle.textContent='ดูสรุปสัปดาห์'; } else { digest.innerHTML=html; digest.classList.add('show'); toggle.textContent='ซ่อนสรุป'; digest.scrollIntoView({behavior:'smooth',block:'start'}); } }; }
+}
+
+// ============================================================
+// MONTHLY
+// ============================================================
+function currentMonthKey() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`; }
+function renderMonthlyPrompt() {
+  const mk = currentMonthKey();
+  const m = (vault.monthly||{})[mk];
+  const prompt = document.getElementById('monthlyPrompt');
+  const title = document.getElementById('monthlyTitle');
+  const now = new Date();
+  const monthName = `${thaiMonths[now.getMonth()]} ${now.getFullYear()+543}`;
+  title.textContent = `สถิติเดือน ${monthName}`;
+  if (!m) {
+    prompt.innerHTML = `<strong>ยังไม่ได้กรอกเดือนนี้</strong>เดือนละครั้ง · ใช้ข้อมูลนี้สร้าง Monthly Report ให้เพื่อน (คุณแคลด)`;
+  } else {
+    const saved = new Date(m.savedAt).toLocaleString('th-TH');
+    prompt.innerHTML = `<strong>บันทึกเดือนนี้แล้ว</strong>อัพเดตล่าสุด: ${saved} · แก้ได้ทุกเมื่อ กดบันทึกซ้ำจะเขียนทับ`;
+    const set = (id, val) => { const el=document.getElementById(id); if (el) { el.value=val; const v=document.getElementById(id+'-val'); if (v) v.textContent=val; } };
+    set('m-debt', m.debt || 0); set('m-save', m.save || 80); set('m-passive', m.passive || 100); set('m-solo', m.solo || 0);
+    document.querySelectorAll('.toggle-group[data-mkey]').forEach(g => {
+      const v = m[g.dataset.mkey];
+      g.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === v));
+    });
+  }
+}
+async function saveMonthly() {
+  const mk = currentMonthKey();
+  const get = id => parseInt(document.getElementById(id).value);
+  const getTog = key => { const g=document.querySelector(`.toggle-group[data-mkey="${key}"]`); const act=g && g.querySelector('.toggle-btn.active'); return act ? act.dataset.val : null; };
+  const entry = { debt: get('m-debt'), save: get('m-save'), passive: get('m-passive'), solo: get('m-solo'), health: getTog('health'), vipassana: getTog('vipassana'), savedAt: new Date().toISOString() };
+  vault.monthly[mk] = entry;
+  await persistLocal();
+  const st = document.getElementById('monthlySaveStatus');
+  st.textContent = 'บันทึกแล้ว';
+  if (vault.cloud && vault.cloud.key && vault.cloud.binId) { st.textContent = 'บันทึก + กำลัง sync...'; const ok = await syncPush(); st.textContent = ok ? 'บันทึก + sync สำเร็จ' : 'บันทึกในเครื่องแล้ว · sync ล้มเหลว'; }
+  renderMonthlyPrompt();
+}
+
+// ============================================================
+// SAVE DAILY
+// ============================================================
+async function saveToday() {
+  const btn = document.getElementById('saveBtn'); const status = document.getElementById('saveStatus');
+  btn.disabled = true; status.textContent = 'กำลังเข้ารหัส...';
+  try {
+    const entry = { ...state, savedAt: new Date().toISOString(), date: new Date().toISOString().slice(0,10) };
+    vault.history = vault.history || []; vault.history.push(entry);
+    if (vault.history.length > 730) vault.history = vault.history.slice(-730);
+    await persistLocal();
+    status.textContent = 'บันทึกในเครื่องแล้ว';
+    if (vault.cloud && vault.cloud.key && vault.cloud.binId) { status.textContent='กำลัง sync...'; const ok=await syncPush(); status.textContent = ok?'บันทึก + sync สำเร็จ':'บันทึกในเครื่องแล้ว · sync ล้มเหลว'; }
+    btn.textContent = 'บันทึกซ้ำ';
+    renderTrend();
+  } catch (e) { status.textContent = 'เกิดข้อผิดพลาด'; }
+  btn.disabled = false;
+}
+
+// ============================================================
+// SETTINGS OVERLAY
+// ============================================================
+function openSettings() {
+  const ov = document.getElementById('settingsOverlay');
+  const off = document.getElementById('syncBlockOff'); const on = document.getElementById('syncBlockOn');
+  if (vault.cloud && vault.cloud.key && vault.cloud.binId) {
+    off.style.display='none'; on.style.display='';
+    document.getElementById('showBinId').textContent = vault.cloud.binId;
+    const last = vault.cloud.lastSyncAt ? new Date(vault.cloud.lastSyncAt) : null;
+    document.getElementById('showLastSync').textContent = last ? last.toLocaleString('th-TH') : 'ยังไม่เคย';
+  } else { off.style.display=''; on.style.display='none'; }
+  ov.classList.add('show');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
+
+// ============================================================
+// HOMEWORK REPORTS
+// ============================================================
+function pills(arr, dict) { if (!arr||!arr.length) return '-'; return arr.map(v => `${dict[v]||v}`).join(', '); }
+function pillCounts(entries, dict) { if (!entries.length) return '-'; return entries.map(([k,c]) => `${dict[k]||k}×${c}`).join(', '); }
+
+function buildDailyReport() {
+  const now = new Date();
+  const today = state; // current in-memory (not yet saved today)
+  const mirrors = today.mirrors || {};
+  const multi = today.multi || {};
+  const single = today.single || {};
+  const dateStr = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${now.getFullYear()+543}`;
+  const lines = [];
+  lines.push(`# การบ้านรายวัน · ${dateStr}`);
+  lines.push('');
+  lines.push('## กระจก 4 ด้าน');
+  lines.push(`- ศีล 5: ${LBL.mirrors.sila[mirrors.sila]||'-'} · สมาธิ: ${LBL.mirrors.med[mirrors.med]||'-'} · ซื่อกับตัวเอง: ${LBL.mirrors.truth[mirrors.truth]||'-'}`);
+  lines.push(`- นอน: ${mirrors.sleep||'-'}/10 · ขยับ: ${LBL.mirrors.move[mirrors.move]||'-'} · ลำไส้: ${LBL.mirrors.gut[mirrors.gut]||'-'} · อาหาร: ${LBL.mirrors.food[mirrors.food]||'-'}`);
+  lines.push(`- โฟกัสงาน: ${LBL.mirrors.focus[mirrors.focus]||'-'} · ใช้จ่าย: ${LBL.mirrors.spend[mirrors.spend]||'-'}`);
+  lines.push(`- อยู่กับภรรยา: ${LBL.mirrors.wife[mirrors.wife]||'-'} · ทักพ่อแม่: ${LBL.mirrors.parents[mirrors.parents]||'-'} · เพื่อนลึก: ${LBL.mirrors.friend[mirrors.friend]||'-'}`);
+  lines.push('');
+  lines.push('## การบ้านเล็กๆ วันนี้');
+  lines.push(`- ทำแล้ว: ${pills(today.commits||[], LBL.commits)}`);
+  lines.push('');
+  lines.push('## มุมลึก (โลภ โกรธ หลง)');
+  lines.push(`- เงาที่เห็นในใจ: ${pills(multi.shadow||[], LBL.shadow)}`);
+  lines.push(`- กรรมวันนี้: ${LBL.karma[single.karma]||'-'} · ถ้าพรุ่งนี้ไม่มา: ${LBL.mortality[single.mortality]||'-'}`);
+  lines.push(`- ใจเอนไปทาง: ${LBL.leans[single.leans]||'-'}`);
+  lines.push(`- สัปดาห์นี้ต้องลด: ${LBL.toRelease[single.toRelease]||'-'}`);
+  lines.push('');
+  lines.push('## มุมมืด (ข้อมูลส่วนตัวมาก)');
+  lines.push(`- เงาภายใน (เสียงกระซิบของทิศอื่น): ${today.shadow_pull||0}/10`);
+  lines.push(`- ที่เกือบพลาด: ${pills(multi.nearmiss||[], LBL.nearmiss)}`);
+  lines.push(`- ทิศที่ 2 วันนี้: ${LBL.world2[single.world2]||'-'}`);
+  lines.push(`- สายตา/ใจเวลาเห็นสวย: ${LBL.gaze[single.gaze]||'-'}`);
+  lines.push(`- หลัง "เดินทางล่าสุด": ${pills(multi.afterfeel||[], LBL.afterfeel)}`);
+  lines.push(`- ราคาที่จ่ายสัปดาห์นี้ (ไม่ใช่เงิน): ${pills(multi.cost||[], LBL.cost)}`);
+  lines.push(`- คนที่อาจเจ็บเงียบๆ: ${pills(multi.hurts||[], LBL.hurts)}`);
+  lines.push('');
+  lines.push('## มุมสว่าง');
+  lines.push(`- บุญเล็กๆ: ${pills(multi.merits||[], LBL.merits)}`);
+  lines.push(`- ความงาม: ${pills(multi.beauty||[], LBL.beauty)}`);
+  lines.push(`- ขอบคุณ: ${pills(multi.gratitude||[], LBL.gratitude)}`);
+  lines.push('');
+  lines.push('## บันทึกเงียบ');
+  lines.push(`- อารมณ์: ${pills(multi.mood||[], LBL.mood)}`);
+  lines.push(`- ภาพของวัน: ${LBL.metaphor[single.metaphor]||'-'}`);
+  lines.push(`- ประโยค: ${pills(multi.statements||[], LBL.statements)}`);
+  lines.push('');
+  lines.push(`## ความย้อนแย้ง: ${today.tension||0}/10`);
+  lines.push('');
+  lines.push('## ภารกิจขยับวันนี้');
+  const stepped = Object.keys(today.missionSteps||{}).filter(k => today.missionSteps[k]);
+  lines.push(`- ${stepped.length ? stepped.map(id => getMissions().find(m=>m.id===id)?.title || id).join(', ') : '-'}`);
+  lines.push('');
+  lines.push('---');
+  lines.push('ช่วยอ่านและให้ข้อสังเกตสั้นๆ: อะไรที่คุณเห็นใน report นี้ที่ผมไม่เห็น?');
+  return lines.join('\n');
+}
+
+function buildWeeklyReport() {
+  const now = new Date();
+  const history = [...(vault.history||[])].reverse();
+  const cutoff = now.getTime() - 7*86400000;
+  const week = history.filter(h => new Date(h.savedAt||0).getTime() >= cutoff);
+  const fmt = d => `${d.getDate()} ${thaiMonths[d.getMonth()]}`;
+  const startDate = new Date(now.getTime() - 6*86400000);
+  const lines = [];
+  lines.push(`# การบ้านรายสัปดาห์ · ${fmt(startDate)} - ${fmt(now)} ${now.getFullYear()+543}`);
+  lines.push('');
+  if (!week.length) { lines.push('_สัปดาห์นี้ยังไม่มีข้อมูลบันทึก — ลองบันทึกวันแรกแล้วค่อยส่ง weekly report ครั้งหน้า_'); return lines.join('\n'); }
+  const avgS = (week.map(h=>h.shadow_pull).filter(v=>typeof v==='number').reduce((a,b)=>a+b,0)/week.length) || 0;
+  const avgT = (week.map(h=>h.tension).filter(v=>typeof v==='number').reduce((a,b)=>a+b,0)/week.length) || 0;
+  const countM = k => { const m={}; week.forEach(h => (h.multi && h.multi[k] || []).forEach(v => m[v]=(m[v]||0)+1)); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
+  const countS = k => { const m={}; week.forEach(h => { const v = h.single && h.single[k]; if (v) m[v]=(m[v]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
+  lines.push(`## สถิติ`);
+  lines.push(`- วันบันทึก: ${week.length}/7`);
+  lines.push(`- เงาภายในเฉลี่ย: ${avgS.toFixed(1)}/10`);
+  lines.push(`- ย้อนแย้งเฉลี่ย: ${avgT.toFixed(1)}/10`);
+  lines.push('');
+  lines.push(`## Pattern ที่เห็น`);
+  lines.push(`- เงาที่ขึ้นบ่อย (โลภ/โกรธ/หลง): ${pillCounts(countM('shadow').slice(0,6), LBL.shadow)}`);
+  lines.push(`- ใจเอนทางไหน: ${pillCounts(countS('leans'), LBL.leans)}`);
+  lines.push(`- ต้องการลดอะไร: ${pillCounts(countS('toRelease'), LBL.toRelease)}`);
+  lines.push(`- อารมณ์สัปดาห์: ${pillCounts(countM('mood').slice(0,5), LBL.mood)}`);
+  lines.push(`- ที่เกือบพลาด: ${pillCounts(countM('nearmiss').slice(0,5), LBL.nearmiss)}`);
+  lines.push(`- ทิศที่ 2 ตลอดสัปดาห์: ${pillCounts(countS('world2'), LBL.world2)}`);
+  lines.push(`- สายตา/ใจเวลาเห็นสวย: ${pillCounts(countS('gaze'), LBL.gaze)}`);
+  lines.push(`- หลังเดินทาง: ${pillCounts(countM('afterfeel').slice(0,5), LBL.afterfeel)}`);
+  lines.push(`- ราคาที่จ่าย (ไม่ใช่เงิน): ${pillCounts(countM('cost').slice(0,5), LBL.cost)}`);
+  lines.push(`- ภาพ metaphor ที่ซ้ำ: ${pillCounts(countS('metaphor').slice(0,3), LBL.metaphor)}`);
+  lines.push(`- กรรมวันนี้ตลอดสัปดาห์: ${pillCounts(countS('karma'), LBL.karma)}`);
+  lines.push('');
+  lines.push(`## ความสัมพันธ์`);
+  lines.push(`- คนที่อาจเจ็บเงียบๆ: ${pillCounts(countM('hurts').slice(0,5), LBL.hurts)}`);
+  lines.push(`- ประโยคเงียบ: ${pillCounts(countM('statements').slice(0,5), LBL.statements)}`);
+  lines.push('');
+  lines.push(`## บวก`);
+  lines.push(`- บุญ: ${pillCounts(countM('merits').slice(0,6), LBL.merits)}`);
+  lines.push(`- ขอบคุณ: ${pillCounts(countM('gratitude').slice(0,6), LBL.gratitude)}`);
+  lines.push(`- ความงาม: ${pillCounts(countM('beauty').slice(0,6), LBL.beauty)}`);
+  lines.push('');
+  lines.push(`## การบ้านเล็กๆ ที่ทำต่อเนื่อง`);
+  lines.push(`- ${pillCounts(countM('commits').slice(0,6), LBL.commits)}`);
+  lines.push('');
+  lines.push(`## ภารกิจ`);
+  getMissions().forEach(m => { const s = vault.missionStatus[m.id]; lines.push(`- ${m.title}: ${LBL.mStatus[s||'null']}`); });
+  lines.push('');
+  lines.push('---');
+  lines.push('คำขอ: ช่วยวิเคราะห์ 3 เรื่อง');
+  lines.push('1. Pattern อะไรที่น่าห่วงที่สุดสัปดาห์นี้?');
+  lines.push('2. อะไรที่กำลังไปได้ดี ที่ผมควรกอดไว้?');
+  lines.push('3. 1 ก้าวเล็กที่สุดที่ทำได้สัปดาห์หน้าเพื่อให้ดีขึ้น?');
+  return lines.join('\n');
+}
+
+function buildMonthlyReport() {
+  const now = new Date();
+  const mk = currentMonthKey();
+  const m = (vault.monthly||{})[mk];
+  const monthName = `${thaiMonths[now.getMonth()]} ${now.getFullYear()+543}`;
+  const lines = [];
+  lines.push(`# การบ้านรายเดือน · ${monthName}`);
+  lines.push('');
+  if (!m) {
+    lines.push('_ยังไม่ได้บันทึกสถิติเดือนนี้ — กรอกในหน้า "สถิติเดือนนี้" ก่อน แล้วค่อยสร้าง report อีกครั้ง_');
+    return lines.join('\n');
+  }
+  lines.push(`## การเงิน + เกษียณ`);
+  lines.push(`- หนี้ลดไปแล้ว: ${m.debt}% ของเป้า 3 ปี`);
+  lines.push(`- เก็บ/ลงทุน: ${m.save}% ของรายได้เดือนนี้`);
+  lines.push(`- Passive income ครอบรายจ่าย: ${m.passive}%`);
+  lines.push('');
+  lines.push(`## สุขภาพ + ธรรมะ`);
+  lines.push(`- ตรวจสุขภาพ: ${m.health==='done'?'ทำแล้วในเดือนนี้':m.health==='booked'?'จองแล้ว':'ยังไม่'}`);
+  lines.push(`- วิปัสสนา 10 วัน: ${m.vipassana==='done'?'ไปแล้ว':m.vipassana==='booked'?'จองแล้ว':'ยังไม่'}`);
+  lines.push(`- Solo retreat เดือนนี้: ${m.solo} ครั้ง`);
+  lines.push('');
+
+  // Aggregate month data from history
+  const history = [...(vault.history||[])].reverse();
+  const ym = mk; // 'YYYY-MM'
+  const monthEntries = history.filter(h => (h.date||'').startsWith(ym));
+  lines.push(`## จากบันทึกรายวันในเดือนนี้ (${monthEntries.length} วัน)`);
+  if (monthEntries.length) {
+    const avgS = (monthEntries.map(h=>h.shadow_pull).filter(v=>typeof v==='number').reduce((a,b)=>a+b,0)/monthEntries.length) || 0;
+    const avgT = (monthEntries.map(h=>h.tension).filter(v=>typeof v==='number').reduce((a,b)=>a+b,0)/monthEntries.length) || 0;
+    lines.push(`- เงาภายในเฉลี่ย: ${avgS.toFixed(1)}/10`);
+    lines.push(`- ย้อนแย้งเฉลี่ย: ${avgT.toFixed(1)}/10`);
+    const cM = k => { const o={}; monthEntries.forEach(h => (h.multi && h.multi[k] || []).forEach(v => o[v]=(o[v]||0)+1)); return Object.entries(o).sort((a,b)=>b[1]-a[1]); };
+    const cS = k => { const o={}; monthEntries.forEach(h => { const v = h.single && h.single[k]; if (v) o[v]=(o[v]||0)+1; }); return Object.entries(o).sort((a,b)=>b[1]-a[1]); };
+    lines.push(`- เงาที่ขึ้นบ่อย (โลภ/โกรธ/หลง): ${pillCounts(cM('shadow').slice(0,6), LBL.shadow)}`);
+    lines.push(`- ใจเอนทางไหน: ${pillCounts(cS('leans'), LBL.leans)}`);
+    lines.push(`- ทิศที่ 2: ${pillCounts(cS('world2'), LBL.world2)}`);
+    lines.push(`- สายตา/ใจเวลาเห็นสวย: ${pillCounts(cS('gaze'), LBL.gaze)}`);
+    lines.push(`- หลังเดินทาง: ${pillCounts(cM('afterfeel').slice(0,5), LBL.afterfeel)}`);
+    lines.push(`- ราคาที่จ่าย: ${pillCounts(cM('cost').slice(0,5), LBL.cost)}`);
+    lines.push(`- ประโยคเงียบ: ${pillCounts(cM('statements').slice(0,5), LBL.statements)}`);
+    lines.push(`- คนที่อาจเจ็บ: ${pillCounts(cM('hurts').slice(0,5), LBL.hurts)}`);
+    lines.push(`- บุญ: ${pillCounts(cM('merits').slice(0,6), LBL.merits)}`);
+  } else { lines.push(`- ไม่มีบันทึกรายวันเดือนนี้`); }
+  lines.push('');
+  lines.push(`## ภารกิจ · สถานะปัจจุบัน`);
+  getMissions().forEach(mi => { const s = vault.missionStatus[mi.id]; lines.push(`- ${mi.title}: ${LBL.mStatus[s||'null']}`); });
+  lines.push('');
+  lines.push('---');
+  lines.push('คำขอ: ช่วยประเมินเดือนที่ผ่านมาในภาพใหญ่');
+  lines.push('1. ผมเดินตรงทิศ หรือเริ่มเอียงแล้ว?');
+  lines.push('2. ถ้าใช้เวลาที่เหลือก่อนเกษียณ 40 อย่างฉลาด ควรทำอะไรเดือนหน้า?');
+  lines.push('3. มี blind spot อะไรที่ผมอาจไม่เห็นจากสถิติชุดนี้?');
+  return lines.join('\n');
+}
+
+let hwTab = 'daily';
+function renderHwPreview() {
+  let text = '';
+  if (hwTab === 'daily') text = buildDailyReport();
+  else if (hwTab === 'weekly') text = buildWeeklyReport();
+  else text = buildMonthlyReport();
+  document.getElementById('hwPreview').textContent = text;
+  window._hwText = text;
+}
+function openHw() {
+  document.getElementById('homeworkOverlay').classList.add('show');
+  hwTab = 'daily';
+  document.querySelectorAll('.hw-tab').forEach(t => t.classList.toggle('active', t.dataset.tab==='daily'));
+  renderHwPreview();
+}
+function closeHw() { document.getElementById('homeworkOverlay').classList.remove('show'); }
+
+document.querySelectorAll('.hw-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.hw-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); hwTab = t.dataset.tab; renderHwPreview(); }));
+document.getElementById('btnHwRefresh').addEventListener('click', renderHwPreview);
+document.getElementById('btnHwClose').addEventListener('click', closeHw);
+document.getElementById('btnHwCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(window._hwText||''); document.getElementById('hwStatus').textContent = 'คัดลอกแล้ว · ไปวางในแชทกับ Claude ได้เลย'; }
+  catch (e) { document.getElementById('hwStatus').textContent = 'คัดลอกไม่สำเร็จ — เลือกข้อความแล้วกด copy เอง'; }
+});
+
+// ============================================================
+// SETTINGS + HOMEWORK + MONTHLY HOOK-UPS
+// ============================================================
+document.getElementById('btnSettings').addEventListener('click', openSettings);
+document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
+document.getElementById('settingsOverlay').addEventListener('click', e => { if (e.target.id==='settingsOverlay') closeSettings(); });
+document.getElementById('btnHomework').addEventListener('click', openHw);
+document.getElementById('homeworkOverlay').addEventListener('click', e => { if (e.target.id==='homeworkOverlay') closeHw(); });
+document.getElementById('btnSaveMonthly').addEventListener('click', saveMonthly);
+
+// MISSION EDIT OVERLAY
+function openMissionEdit() { ensureMissions(); renderMissionEditList(); document.getElementById('missionOverlay').classList.add('show'); }
+function closeMissionEdit() { document.getElementById('missionOverlay').classList.remove('show'); }
+document.getElementById('btnEditMissions').addEventListener('click', openMissionEdit);
+document.getElementById('btnCloseMissionEdit').addEventListener('click', closeMissionEdit);
+document.getElementById('missionOverlay').addEventListener('click', e => { if (e.target.id==='missionOverlay') closeMissionEdit(); });
+document.getElementById('btnAddMission').addEventListener('click', addNewMission);
+
+// CUSTOM STATEMENTS
+function renderCustomStatements() {
+  const grid = document.getElementById('statementGrid');
+  if (!grid) return;
+  // Remove previously appended custom tiles
+  grid.querySelectorAll('.custom-tile-wrap').forEach(el => el.remove());
+  const customs = (vault.customStatements || []);
+  customs.forEach(cs => {
+    const wrap = document.createElement('span');
+    wrap.className = 'custom-tile-wrap';
+    const on = state.multi.statements.includes(cs.id);
+    wrap.innerHTML = `<button class="tile ${on?'on':''}" data-v="${cs.id}"><span class="emoji">·</span>${escapeHtml(cs.text)}</button><button class="custom-tile-x" data-cx="${cs.id}" title="ลบ">×</button>`;
+    // Delete button — stop propagation so the grid handler doesn't toggle
+    wrap.querySelector('.custom-tile-x').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('ลบประโยคนี้?')) return;
+      vault.customStatements = (vault.customStatements || []).filter(x => x.id !== cs.id);
+      state.multi.statements = state.multi.statements.filter(v => v !== cs.id);
+      await persistLocal();
+      renderCustomStatements();
+    });
+    grid.appendChild(wrap);
+  });
+  // Add custom labels to LBL.statements so reports show their text
+  (vault.customStatements || []).forEach(cs => { LBL.statements[cs.id] = cs.text; });
+}
+
+async function addCustomStatement() {
+  const inp = document.getElementById('newStatement');
+  const text = (inp.value || '').trim();
+  if (!text) return;
+  const id = 'cs_' + Date.now();
+  vault.customStatements = vault.customStatements || [];
+  vault.customStatements.push({ id, text, createdAt: new Date().toISOString() });
+  LBL.statements[id] = text;
+  await persistLocal();
+  inp.value = '';
+  renderCustomStatements();
+}
+document.getElementById('btnAddStatement').addEventListener('click', addCustomStatement);
+document.getElementById('newStatement').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustomStatement(); } });
+
+document.getElementById('btnSetupConnect').addEventListener('click', async () => {
+  const key = document.getElementById('setupKey').value.trim();
+  const st = document.getElementById('setupStatus');
+  if (!key) { st.textContent='กรอก Master Key'; return; }
+  st.innerHTML = '<span class="gate-loading"></span>กำลังสร้าง bin...';
+  try { const payload = { cipher: await encryptObj(vault, PIN), updatedAt: new Date().toISOString() }; const binId = await jbCreate(key, payload); vault.cloud = { key, binId, lastSyncAt: new Date().toISOString() }; await persistLocal(); st.textContent = 'สำเร็จ · Bin ID = ' + binId; setSyncDot('on'); setTimeout(openSettings, 800); }
+  catch (e) { st.textContent = 'ไม่สำเร็จ · เช็ค Master Key'; }
+});
+document.getElementById('btnCopyBin').addEventListener('click', async () => { try { await navigator.clipboard.writeText(vault.cloud.binId); document.getElementById('syncOpStatus').textContent='คัดลอก Bin ID แล้ว'; } catch(e){} });
+document.getElementById('btnCopyKey').addEventListener('click', async () => { try { await navigator.clipboard.writeText(vault.cloud.key); document.getElementById('syncOpStatus').textContent='คัดลอก Master Key แล้ว'; } catch(e){} });
+document.getElementById('btnSyncNow').addEventListener('click', async () => {
+  const s = document.getElementById('syncOpStatus');
+  s.innerHTML='<span class="gate-loading"></span>Pull...';
+  const okp = await syncPull();
+  if (okp) { s.innerHTML='<span class="gate-loading"></span>Push...'; const okq = await syncPush(); s.textContent = okq?'Sync สำเร็จ':'Push ล้มเหลว'; renderTrendAndBanner(); maybeShowDigest(); checkStorm(); renderMonthlyPrompt(); renderMissions(); openSettings(); }
+  else s.textContent = 'Pull ล้มเหลว · เช็คเน็ต';
+});
+document.getElementById('btnDisconnect').addEventListener('click', async () => { if (!confirm('ถอด cloud ออก?')) return; vault.cloud = null; await persistLocal(); setSyncDot('off'); openSettings(); });
+
+// ============================================================
+// INIT APP
+// ============================================================
+async function initApp() {
+  ensureMissions();
+  renderDate(); renderCountdown(); bindInteractions();
+  renderTrend(); analyzeAndBanner(); checkStorm(); breathCycle();
+  maybeShowDigest();
+  renderMonthlyPrompt();
+  renderMissions();
+  renderCustomStatements();
+  const saveBtn = document.getElementById('saveBtn');
+  if (!saveBtn.dataset.bound) { saveBtn.dataset.bound='1'; saveBtn.addEventListener('click', saveToday); }
+  const lockBtn = document.getElementById('lockNowBtn');
+  if (!lockBtn.dataset.bound) { lockBtn.dataset.bound='1'; lockBtn.addEventListener('click', lockApp); }
+  setSyncDot(vault.cloud && vault.cloud.key ? 'on' : 'off');
+}
+
+// AUTO-LOCK
+let idleTimer = null; const IDLE_MS = 10*60*1000;
+function resetIdle() { if (!document.body.classList.contains('unlocked')) return; clearTimeout(idleTimer); idleTimer = setTimeout(lockApp, IDLE_MS); }
+['click','keydown','touchstart','mousemove','scroll'].forEach(evt => document.addEventListener(evt, resetIdle, { passive: true }));
+
+// BOOT
+bootGate();
+</script>
+</body>
+</html>
