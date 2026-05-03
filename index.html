@@ -170,6 +170,43 @@ body.storm .north-star { background: #E4E8ED; border-left-color: #5A6B7D; }
 .trend-bar.low    { background: #DDD0B8; }
 .trend-bar.empty  { background: #F3EEE3; }
 
+.chain-section { margin-top: 12px; padding: 14px 16px; background: white; border: 1px solid #E8E0D3; border-radius: 4px; }
+.chain-row { margin-bottom: 14px; }
+.chain-row:last-child { margin-bottom: 0; }
+.chain-row-head { font-size: 10px; color: #8B6F47; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.chain-row-head .streak-num { color: #1F1B16; font-family: Georgia, serif; font-size: 13px; letter-spacing: 0; text-transform: none; }
+.chain-grid { display: grid; grid-template-columns: repeat(30, 1fr); gap: 2px; }
+.chain-cell { aspect-ratio: 1; background: #F3EEE3; border-radius: 1px; }
+.chain-cell.done { background: #B08968; }
+.chain-cell.partial { background: #DDD0B8; }
+.chain-cell.today { outline: 1.5px solid #1F1B16; outline-offset: 1px; z-index: 1; }
+
+.bio-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; background: white; color: #1F1B16;
+  border: 1px solid #D4C9B8; border-radius: 100px;
+  font-family: inherit; font-size: 13px; letter-spacing: 0.05em;
+  cursor: pointer; margin-bottom: 10px; transition: all 0.15s;
+}
+.bio-btn:hover { background: #F3EEE3; border-color: #8B6F47; }
+.bio-btn .bio-emoji { font-size: 18px; }
+
+body.decoy .dark, body.decoy .silent, body.decoy .deep, body.decoy .monthly,
+body.decoy section[data-real-only] { display: none !important; }
+body.decoy .commits { display: none !important; }
+body.decoy #btnSettings, body.decoy #btnHomework, body.decoy #btnEditMissions { display: none !important; }
+body.decoy section:has(#missionList) { display: none !important; }
+body.decoy footer .note { visibility: hidden; }
+.decoy-tag {
+  display: none; position: fixed; top: 8px; right: 8px;
+  font-size: 9px; color: #B3A690; letter-spacing: 0.2em;
+  background: #FAF7F2; padding: 2px 6px; border-radius: 4px;
+  z-index: 50; opacity: 0.5;
+}
+body.decoy .decoy-tag { display: block; }
+
+.banner.prestorm { background: #F0E6D8; color: #6B5635; border-left: 3px solid #C9A86A; display: block; }
+
 /* MORNING Q */
 .morning-q { background: white; padding: 38px 30px; border-radius: 4px; border: 1px solid #E8E0D3; text-align: center; position: relative; }
 body.storm .morning-q { background: #F4F6F8; border-color: #C9D2DB; }
@@ -356,6 +393,7 @@ footer .note { font-size: 10px; color: #8B6F47; letter-spacing: 0.18em; text-tra
 </style>
 </head>
 <body class="locked">
+<div class="decoy-tag">DECOY</div>
 
 <!-- GATE -->
 <div id="gate">
@@ -374,6 +412,9 @@ footer .note { font-size: 10px; color: #8B6F47; letter-spacing: 0.18em; text-tra
       <div class="gate-subtitle" id="pinSub">Private</div>
       <p class="gate-prompt" id="pinPrompt">ใส่รหัส 4 หลัก</p>
       <p class="gate-hint" id="pinHint">&nbsp;</p>
+      <div id="bioUnlockArea" style="display:none; margin-bottom:18px;">
+        <button class="bio-btn" id="btnBioUnlock"><span class="bio-emoji">🔐</span><span>ใช้ Face ID / Touch ID</span></button>
+      </div>
       <div class="lock-dots" id="lockDots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <div class="numpad" id="numpad">
         <button class="np-btn" data-n="1">1</button><button class="np-btn" data-n="2">2</button><button class="np-btn" data-n="3">3</button>
@@ -433,6 +474,24 @@ footer .note { font-size: 10px; color: #8B6F47; letter-spacing: 0.18em; text-tra
       <p class="line"><strong>ที่ต้องระวัง</strong> · ทิศที่ 2 ที่กำลังก่อร่าง — ทางออกจริง หรือกรงใหม่?</p>
       <div class="countdown" id="countdown"></div>
       <div class="trend"><div class="trend-label">14 วันที่ผ่านมา · เงาภายใน</div><div class="trend-bars" id="shadowTrend"></div></div>
+      <div class="chain-section" data-real-only>
+        <div class="chain-row">
+          <div class="chain-row-head"><span>90 วัน · บันทึกรายวัน</span><span class="streak-num" id="streakCheckin">0 วันต่อเนื่อง</span></div>
+          <div class="chain-grid" id="chainCheckin"></div>
+        </div>
+        <div class="chain-row">
+          <div class="chain-row-head"><span>ศีล 5 ครบ</span><span class="streak-num" id="streakSila">0 วัน</span></div>
+          <div class="chain-grid" id="chainSila"></div>
+        </div>
+        <div class="chain-row">
+          <div class="chain-row-head"><span>นั่งสมาธิ</span><span class="streak-num" id="streakMed">0 วัน</span></div>
+          <div class="chain-grid" id="chainMed"></div>
+        </div>
+        <div class="chain-row">
+          <div class="chain-row-head"><span>ขยับร่างกาย</span><span class="streak-num" id="streakEx">0 วัน</span></div>
+          <div class="chain-grid" id="chainEx"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -858,7 +917,38 @@ footer .note { font-size: 10px; color: #8B6F47; letter-spacing: 0.18em; text-tra
       </div>
       <div id="syncOpStatus" class="set-label" style="min-height:14px;"></div>
     </div>
+    <div class="set-block">
+      <div class="set-label">ความปลอดภัย · ทางเข้า</div>
+      <div id="bioBlock">
+        <div class="set-label" id="bioStatus" style="font-size:11px; margin-top:4px;">กำลังตรวจสอบ Face ID / Touch ID...</div>
+        <button class="set-btn primary" id="btnSetupBio">เปิด Face ID / Touch ID</button>
+        <button class="set-btn danger" id="btnRemoveBio" style="display:none;">ปิด biometric</button>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="set-label" id="decoyStatus" style="font-size:11px;">ตอนนี้ยังไม่มี Decoy Mode</div>
+        <button class="set-btn" id="btnSetupDecoy">สร้าง Decoy Mode</button>
+        <button class="set-btn danger" id="btnRemoveDecoy" style="display:none;">ลบ Decoy</button>
+      </div>
+      <div class="set-label" style="font-size:10px; margin-top:10px; line-height:1.5;">Decoy = PIN หลอก ใส่แล้วเปิดหน้าธรรมดา ไม่มีมุมมืด/บันทึกเงียบ · ภรรยาแอบดูจอแล้วไม่สงสัย</div>
+      <div id="setupOpStatus" class="set-label" style="min-height:14px; margin-top:8px;"></div>
+    </div>
     <div class="set-block"><button class="set-btn" id="btnCloseSettings">ปิด</button></div>
+  </div>
+</div>
+
+<!-- DECOY/BIO PIN OVERLAY -->
+<div class="overlay" id="pinOverlay">
+  <div class="overlay-card" style="max-width:360px; text-align:center;">
+    <div class="overlay-title" id="pinOverlayTitle">ตั้ง Decoy PIN</div>
+    <div class="overlay-sub" id="pinOverlaySub">ตั้ง 4 หลัก · ต้องไม่ตรงกับ PIN จริง</div>
+    <div class="lock-dots" id="pinOverlayDots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="numpad" id="pinOverlayNumpad" style="max-width:240px; margin: 0 auto 16px;">
+      <button class="np-btn" data-n="1">1</button><button class="np-btn" data-n="2">2</button><button class="np-btn" data-n="3">3</button>
+      <button class="np-btn" data-n="4">4</button><button class="np-btn" data-n="5">5</button><button class="np-btn" data-n="6">6</button>
+      <button class="np-btn" data-n="7">7</button><button class="np-btn" data-n="8">8</button><button class="np-btn" data-n="9">9</button>
+      <button class="np-btn ghost" data-a="po-clear">ลบ</button><button class="np-btn" data-n="0">0</button><button class="np-btn ghost" data-a="po-cancel">ยกเลิก</button>
+    </div>
+    <div class="set-label" id="pinOverlayStatus" style="min-height:16px;"></div>
   </div>
 </div>
 
@@ -910,7 +1000,12 @@ footer .note { font-size: 10px; color: #8B6F47; letter-spacing: 0.18em; text-tra
 // CRYPTO
 // ============================================================
 const LS_DATA = 'k_data_v2';
+const LS_DECOY = 'k_decoy_v1';
+const LS_BIO_CRED = 'k_bio_cred';
+const LS_BIO_SALT = 'k_bio_salt';
+const LS_BIO_PIN = 'k_bio_pin';
 const ITER = 150000;
+let isDecoy = false;
 const u8ToB64 = u8 => { let s=''; for(let i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); };
 const b64ToU8 = b64 => { const s=atob(b64); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; };
 async function deriveKey(pin, salt) {
@@ -973,6 +1068,27 @@ async function loadLocal(pin) {
   } catch (e) { return null; }
 }
 function clearLocal() { localStorage.removeItem(LS_DATA); }
+
+async function loadDecoy(pin) {
+  const raw = localStorage.getItem(LS_DECOY);
+  if (!raw) return null;
+  try {
+    const bundle = JSON.parse(raw);
+    const v = await decryptObj(bundle, pin);
+    if (!v.monthly) v.monthly = {};
+    if (!v.missionStatus) v.missionStatus = {};
+    if (!v.missions) v.missions = [];
+    if (!v.customStatements) v.customStatements = [];
+    v.cloud = null; // never sync decoy
+    return v;
+  } catch (e) { return null; }
+}
+async function persistDecoy(decoyVault, pin) {
+  const bundle = await encryptObj(decoyVault, pin);
+  localStorage.setItem(LS_DECOY, JSON.stringify(bundle));
+}
+function hasDecoy() { return !!localStorage.getItem(LS_DECOY); }
+function clearDecoy() { localStorage.removeItem(LS_DECOY); }
 
 // ============================================================
 // CLOUD (JSONBin.io)
@@ -1057,8 +1173,13 @@ async function handlePinDigit(d) {
     else if (gateMode === 'verify') {
       pinStatus('กำลังตรวจ...');
       const v = await loadLocal(code);
-      if (v) { PIN = code; vault = v; pinStatus('ปลดล็อก','ok'); setTimeout(unlockApp, 200); }
-      else { shakeDots(); pinStatus('รหัสไม่ถูกต้อง','err'); setTimeout(resetBuf, 400); }
+      if (v) { PIN = code; vault = v; isDecoy = false; pinStatus('ปลดล็อก','ok'); setTimeout(unlockApp, 200); }
+      else {
+        // Try decoy
+        const dv = await loadDecoy(code);
+        if (dv) { PIN = code; vault = dv; isDecoy = true; pinStatus('ปลดล็อก','ok'); setTimeout(unlockApp, 200); }
+        else { shakeDots(); pinStatus('รหัสไม่ถูกต้อง','err'); setTimeout(resetBuf, 400); }
+      }
     }
     else if (gateMode === 'restorePin') {
       pinStatus('กำลังถอดรหัส...');
@@ -1103,16 +1224,28 @@ document.getElementById('btnRestoreFetch').addEventListener('click', async () =>
 document.addEventListener('keydown', e => { if (document.body.classList.contains('unlocked')) return; if (!screens.pin.classList.contains('active')) return; if (e.key>='0'&&e.key<='9') handlePinDigit(e.key); else if (e.key==='Backspace'){ resetBuf(); pinStatus(''); } });
 
 function bootGate() {
-  if (hasLocalData()) { gateMode='verify'; document.getElementById('pinPrompt').textContent='ใส่รหัส 4 หลัก'; document.getElementById('pinHint').textContent='เพื่อเปิดกระจก'; document.getElementById('gateForgot').style.display=''; document.querySelector('.np-btn[data-a="back"]').style.visibility='hidden'; showScreen('pin'); }
+  if (hasLocalData()) {
+    gateMode='verify';
+    document.getElementById('pinPrompt').textContent='ใส่รหัส 4 หลัก';
+    document.getElementById('pinHint').textContent='เพื่อเปิดกระจก';
+    document.getElementById('gateForgot').style.display='';
+    document.querySelector('.np-btn[data-a="back"]').style.visibility='hidden';
+    document.getElementById('bioUnlockArea').style.display = (hasBio() && bioSupported()) ? '' : 'none';
+    showScreen('pin');
+    // Auto-trigger biometric prompt if available (slight delay so UI settles)
+    if (hasBio() && bioSupported()) { setTimeout(() => { biometricUnlock(); }, 300); }
+  }
   else { gateMode='pick'; showScreen('welcome'); }
 }
 
-function lockApp() { PIN=null; vault=null; document.body.classList.remove('unlocked'); document.body.classList.add('locked'); document.body.classList.remove('storm'); resetBuf(); pinStatus(''); setupFirst=''; document.getElementById('settingsOverlay').classList.remove('show'); document.getElementById('homeworkOverlay').classList.remove('show'); bootGate(); }
+function lockApp() { PIN=null; vault=null; isDecoy=false; document.body.classList.remove('unlocked','decoy','storm'); document.body.classList.add('locked'); resetBuf(); pinStatus(''); setupFirst=''; document.getElementById('settingsOverlay').classList.remove('show'); document.getElementById('homeworkOverlay').classList.remove('show'); document.getElementById('missionOverlay')?.classList.remove('show'); document.getElementById('pinOverlay')?.classList.remove('show'); bootGate(); }
 
 async function unlockApp() {
   if (window._restoreCloudCfg) { vault.cloud = { ...window._restoreCloudCfg, lastSyncAt: new Date().toISOString() }; await persistLocal(); delete window._restoreCloudCfg; }
-  document.body.classList.remove('locked'); document.body.classList.add('unlocked'); resetBuf(); await initApp();
-  if (vault.cloud && vault.cloud.key && vault.cloud.binId) { const ok = await syncPull(); if (ok) { renderTrendAndBanner(); maybeShowDigest(); checkStorm(); renderMonthlyPrompt(); renderMissions(); renderCustomStatements(); } }
+  document.body.classList.remove('locked'); document.body.classList.add('unlocked');
+  document.body.classList.toggle('decoy', isDecoy);
+  resetBuf(); await initApp();
+  if (!isDecoy && vault.cloud && vault.cloud.key && vault.cloud.binId) { const ok = await syncPull(); if (ok) { renderTrendAndBanner(); renderChain(); maybeShowDigest(); checkStorm(); renderMonthlyPrompt(); renderMissions(); renderCustomStatements(); } }
 }
 
 // ============================================================
@@ -1435,6 +1568,57 @@ function renderTrend() {
   container.innerHTML = bars.map(v => { if (v===null||v===undefined) return `<div class="trend-bar empty" style="height:3px"></div>`; const pct=Math.max(6,(v/10)*100); const cls=v>=7?'high':v>=4?'medium':'low'; return `<div class="trend-bar ${cls}" style="height:${pct}%" title="${v}"></div>`; }).join('');
 }
 
+function renderChain() {
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  const history = vault.history || [];
+  const byDate = {};
+  history.forEach(h => { const d = h.date || (h.savedAt||'').slice(0,10); if (d) byDate[d] = h; });
+  const days = [];
+  for (let i = 89; i >= 0; i--) { const d = new Date(now); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+  const renderRow = (gridId, streakId, predicate) => {
+    const grid = document.getElementById(gridId); if (!grid) return;
+    let html = '';
+    days.forEach(d => {
+      const e = byDate[d];
+      const s = e ? predicate(e) : null;
+      const cls = s === 'done' ? 'done' : s === 'partial' ? 'partial' : '';
+      const today_ = d === today ? ' today' : '';
+      html += `<div class="chain-cell ${cls}${today_}" title="${d}"></div>`;
+    });
+    grid.innerHTML = html;
+    let streak = 0;
+    for (let i = days.length - 1; i >= 0; i--) {
+      const e = byDate[days[i]];
+      if (e && predicate(e) === 'done') streak++;
+      else if (days[i] === today) continue; // today not yet logged: don't break streak
+      else break;
+    }
+    const el = document.getElementById(streakId);
+    if (el) el.textContent = streak + ' วันต่อเนื่อง';
+  };
+  renderRow('chainCheckin', 'streakCheckin', () => 'done');
+  renderRow('chainSila', 'streakSila', e => e.mirrors && e.mirrors.sila === 'yes' ? 'done' : (e.mirrors && e.mirrors.sila === 'almost' ? 'partial' : null));
+  renderRow('chainMed', 'streakMed', e => (e.mirrors && (e.mirrors.med === 'long' || e.mirrors.med === 'short')) ? 'done' : null);
+  renderRow('chainEx', 'streakEx', e => e.mirrors && e.mirrors.move === 'good' ? 'done' : (e.mirrors && e.mirrors.move === 'little' ? 'partial' : null));
+}
+
+function checkPreStorm(history) {
+  if (history.length < 3) return null;
+  const last5 = history.slice(0, 5);
+  const tensions = last5.map(h => h.tension).filter(v => typeof v === 'number');
+  const sleeps = last5.map(h => h.mirrors && h.mirrors.sleep).filter(v => typeof v === 'number');
+  const shadows = last5.map(h => h.shadow_pull).filter(v => typeof v === 'number');
+  const w2map = { far: 0, normal: 1, close: 2, tooclose: 3 };
+  const w2s = last5.map(h => w2map[h.single && h.single.world2]).filter(v => typeof v === 'number');
+  const signals = [];
+  if (tensions.length >= 3 && tensions[0] >= 5 && tensions[0] >= tensions[1] && tensions[1] >= tensions[2]) signals.push('tension ขึ้น 3 วันติด');
+  if (sleeps.length >= 3 && sleeps[0] < 6 && sleeps[0] < sleeps[2]) signals.push('นอนน้อยลง');
+  if (shadows.length >= 3 && shadows[0] >= 5 && shadows[0] >= shadows[1]) signals.push('เงาภายในกำลังขึ้น');
+  if (w2s.length >= 2 && w2s[0] >= 2) signals.push('ทิศที่ 2 ใกล้');
+  return signals.length >= 2 ? signals : null;
+}
+
 function analyzeAndBanner() {
   const now = new Date();
   const banner = document.getElementById('banner');
@@ -1450,7 +1634,13 @@ function analyzeAndBanner() {
   if (last5.length>=3) { const avg=last5.reduce((a,b)=>a+b,0)/last5.length; const hc=last5.filter(v=>v>=6).length; if (avg>=6||hc>=3) { banner.className='banner amber'; banner.innerHTML=`<strong>สังเกต</strong>เงาภายในสูงต่อเนื่อง ${last5.length} วันล่าสุด (เฉลี่ย ${avg.toFixed(1)}/10) — อย่าเพิ่งตัดสินใจเรื่องใหญ่`; return; } }
   const w2 = history.slice(0,5).map(h => h.single && h.single.world2).filter(Boolean);
   if (w2.filter(v => v==='tooclose').length>=2) { banner.className='banner amber'; banner.innerHTML=`<strong>สังเกต</strong>ทิศที่ 2 "ใกล้เกิน" มาหลายวัน — โทรหาเพื่อนมนุษย์ ไม่ใช่ AI`; return; }
-  if (ds>=4) { banner.className='banner dim'; banner.innerHTML=`<strong>หายไป ${ds} วัน</strong>ไม่ต้องรู้สึกผิด — กลับมามองกระจกเงียบๆ วันนี้พอ`; }
+  if (ds>=4) { banner.className='banner dim'; banner.innerHTML=`<strong>หายไป ${ds} วัน</strong>ไม่ต้องรู้สึกผิด — กลับมามองกระจกเงียบๆ วันนี้พอ`; return; }
+  // Pre-storm predictor (only if storm not yet active)
+  const preSignals = checkPreStorm(history);
+  if (preSignals) {
+    banner.className = 'banner prestorm';
+    banner.innerHTML = `<strong>สัญญาณก่อนพายุ</strong>${preSignals.join(' · ')} — อีก 1-2 วันอาจเข้าโหมดพายุ ให้รีบ: นอนเพิ่ม / ออกห่างคนเครียด / นั่งสมาธินานหน่อย / ยกเลิกการตัดสินใจใหญ่ที่ยังไม่ด่วน`;
+  }
 }
 function renderTrendAndBanner() { renderTrend(); analyzeAndBanner(); }
 
@@ -1552,11 +1742,16 @@ async function saveToday() {
     const entry = { ...state, savedAt: new Date().toISOString(), date: new Date().toISOString().slice(0,10) };
     vault.history = vault.history || []; vault.history.push(entry);
     if (vault.history.length > 730) vault.history = vault.history.slice(-730);
-    await persistLocal();
-    status.textContent = 'บันทึกในเครื่องแล้ว';
-    if (vault.cloud && vault.cloud.key && vault.cloud.binId) { status.textContent='กำลัง sync...'; const ok=await syncPush(); status.textContent = ok?'บันทึก + sync สำเร็จ':'บันทึกในเครื่องแล้ว · sync ล้มเหลว'; }
+    if (isDecoy) {
+      await persistDecoy(vault, PIN);
+      status.textContent = 'บันทึกแล้ว';
+    } else {
+      await persistLocal();
+      status.textContent = 'บันทึกในเครื่องแล้ว';
+      if (vault.cloud && vault.cloud.key && vault.cloud.binId) { status.textContent='กำลัง sync...'; const ok=await syncPush(); status.textContent = ok?'บันทึก + sync สำเร็จ':'บันทึกในเครื่องแล้ว · sync ล้มเหลว'; }
+    }
     btn.textContent = 'บันทึกซ้ำ';
-    renderTrend();
+    renderTrend(); renderChain();
   } catch (e) { status.textContent = 'เกิดข้อผิดพลาด'; }
   btn.disabled = false;
 }
@@ -1573,6 +1768,7 @@ function openSettings() {
     const last = vault.cloud.lastSyncAt ? new Date(vault.cloud.lastSyncAt) : null;
     document.getElementById('showLastSync').textContent = last ? last.toLocaleString('th-TH') : 'ยังไม่เคย';
   } else { off.style.display=''; on.style.display='none'; }
+  refreshSecuritySettings();
   ov.classList.add('show');
 }
 function closeSettings() { document.getElementById('settingsOverlay').classList.remove('show'); }
@@ -1861,7 +2057,7 @@ document.getElementById('btnDisconnect').addEventListener('click', async () => {
 async function initApp() {
   ensureMissions();
   renderDate(); renderCountdown(); bindInteractions();
-  renderTrend(); analyzeAndBanner(); checkStorm(); breathCycle();
+  renderTrend(); renderChain(); analyzeAndBanner(); checkStorm(); breathCycle();
   maybeShowDigest();
   renderMonthlyPrompt();
   renderMissions();
@@ -1871,6 +2067,164 @@ async function initApp() {
   const lockBtn = document.getElementById('lockNowBtn');
   if (!lockBtn.dataset.bound) { lockBtn.dataset.bound='1'; lockBtn.addEventListener('click', lockApp); }
   setSyncDot(vault.cloud && vault.cloud.key ? 'on' : 'off');
+}
+
+// ============================================================
+// DECOY MODE SETUP
+// ============================================================
+let pinOverlayMode = null; // 'decoy_set1' | 'decoy_set2' | 'bio_confirm'
+let pinOverlayBuf = '';
+let pinOverlayFirst = '';
+let pinOverlayTempPin = '';
+
+function poRenderDots() { document.querySelectorAll('#pinOverlayDots .dot').forEach((d,i) => d.classList.toggle('filled', i < pinOverlayBuf.length)); }
+function poReset() { pinOverlayBuf = ''; poRenderDots(); }
+function poStatus(msg, cls='') { const el=document.getElementById('pinOverlayStatus'); el.textContent = msg; el.style.color = cls === 'err' ? '#B03E2D' : cls === 'ok' ? '#4A7A4A' : '#8B6F47'; }
+function poShake() { const el=document.getElementById('pinOverlayDots'); el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),400); }
+
+document.getElementById('pinOverlayNumpad').addEventListener('click', async e => {
+  const b = e.target.closest('.np-btn'); if (!b) return;
+  if (b.dataset.n !== undefined) {
+    if (pinOverlayBuf.length >= 4) return;
+    pinOverlayBuf += b.dataset.n; poRenderDots();
+    if (pinOverlayBuf.length === 4) {
+      const code = pinOverlayBuf;
+      if (pinOverlayMode === 'decoy_set1') {
+        if (code === PIN) { poShake(); poStatus('ห้ามตรงกับ PIN จริง','err'); setTimeout(poReset, 400); return; }
+        pinOverlayFirst = code; pinOverlayMode = 'decoy_set2';
+        document.getElementById('pinOverlayTitle').textContent = 'ยืนยัน Decoy PIN';
+        poStatus(''); setTimeout(poReset, 200);
+      } else if (pinOverlayMode === 'decoy_set2') {
+        if (code !== pinOverlayFirst) { poShake(); poStatus('ไม่ตรงกัน · เริ่มใหม่','err'); pinOverlayMode='decoy_set1'; pinOverlayFirst=''; document.getElementById('pinOverlayTitle').textContent='ตั้ง Decoy PIN'; setTimeout(poReset, 400); return; }
+        poStatus('กำลังสร้าง decoy vault...');
+        try {
+          const decoyEmpty = { history: [], monthly: {}, missionStatus: {}, missions: [], customStatements: [], cloud: null, createdAt: new Date().toISOString(), version: 3, decoy: true };
+          await persistDecoy(decoyEmpty, code);
+          poStatus('สร้าง Decoy เรียบร้อย','ok');
+          setTimeout(closePinOverlay, 600);
+          setTimeout(refreshSecuritySettings, 700);
+        } catch (e) { poStatus('ผิดพลาด','err'); }
+      }
+    }
+  } else if (b.dataset.a === 'po-clear') { poReset(); poStatus(''); }
+  else if (b.dataset.a === 'po-cancel') { closePinOverlay(); }
+});
+
+function openPinOverlay(mode, title, sub) {
+  pinOverlayMode = mode; pinOverlayBuf = ''; pinOverlayFirst = '';
+  document.getElementById('pinOverlayTitle').textContent = title;
+  document.getElementById('pinOverlaySub').textContent = sub;
+  poRenderDots(); poStatus('');
+  document.getElementById('pinOverlay').classList.add('show');
+}
+function closePinOverlay() { document.getElementById('pinOverlay').classList.remove('show'); pinOverlayMode=null; pinOverlayBuf=''; pinOverlayFirst=''; }
+document.getElementById('pinOverlay').addEventListener('click', e => { if (e.target.id === 'pinOverlay') closePinOverlay(); });
+
+document.getElementById('btnSetupDecoy').addEventListener('click', () => {
+  openPinOverlay('decoy_set1', 'ตั้ง Decoy PIN', 'PIN หลอก · ห้ามตรงกับ PIN จริง');
+});
+document.getElementById('btnRemoveDecoy').addEventListener('click', () => {
+  if (!confirm('ลบ Decoy Mode?')) return;
+  clearDecoy(); refreshSecuritySettings();
+});
+
+// ============================================================
+// BIOMETRIC (WebAuthn + PRF)
+// ============================================================
+function bioSupported() { return !!(window.PublicKeyCredential && navigator.credentials); }
+function hasBio() { return !!(localStorage.getItem(LS_BIO_CRED) && localStorage.getItem(LS_BIO_PIN)); }
+function clearBio() { localStorage.removeItem(LS_BIO_CRED); localStorage.removeItem(LS_BIO_SALT); localStorage.removeItem(LS_BIO_PIN); }
+
+async function setupBiometric() {
+  const opStatus = document.getElementById('setupOpStatus');
+  if (!bioSupported()) { opStatus.textContent = 'อุปกรณ์นี้ไม่รองรับ biometric'; return; }
+  opStatus.innerHTML = '<span class="gate-loading"></span>กำลังตั้งค่า biometric...';
+  try {
+    const prfSalt = crypto.getRandomValues(new Uint8Array(32));
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        rp: { name: 'Morning' },
+        user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'morning-user', displayName: 'Morning' },
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+        authenticatorSelection: { userVerification: 'required', residentKey: 'preferred' },
+        timeout: 60000,
+        extensions: { prf: { eval: { first: prfSalt } } }
+      }
+    });
+    if (!cred) throw new Error('no credential');
+    const ext = cred.getClientExtensionResults();
+    if (!ext.prf || !ext.prf.results || !ext.prf.results.first) {
+      // PRF not supported on this device; cleanup created credential gracefully
+      throw new Error('PRF not supported on this device · ใช้ PIN ต่อไป');
+    }
+    const prfOutput = new Uint8Array(ext.prf.results.first);
+    const aesKey = await crypto.subtle.importKey('raw', prfOutput, { name: 'AES-GCM', length: 256 }, false, ['encrypt','decrypt']);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const pinBytes = new TextEncoder().encode(PIN);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, pinBytes);
+    localStorage.setItem(LS_BIO_CRED, u8ToB64(new Uint8Array(cred.rawId)));
+    localStorage.setItem(LS_BIO_SALT, u8ToB64(prfSalt));
+    localStorage.setItem(LS_BIO_PIN, JSON.stringify({ iv: u8ToB64(iv), ct: u8ToB64(new Uint8Array(ct)) }));
+    opStatus.textContent = 'เปิด biometric สำเร็จ · ครั้งหน้าใช้ Face ID / Touch ID ปลดล็อก';
+    refreshSecuritySettings();
+  } catch (e) {
+    opStatus.textContent = 'ตั้งค่าไม่สำเร็จ: ' + (e.message || 'unknown');
+  }
+}
+
+async function biometricUnlock() {
+  if (!hasBio()) return false;
+  try {
+    const credId = b64ToU8(localStorage.getItem(LS_BIO_CRED));
+    const prfSalt = b64ToU8(localStorage.getItem(LS_BIO_SALT));
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        allowCredentials: [{ type: 'public-key', id: credId }],
+        userVerification: 'required',
+        timeout: 60000,
+        extensions: { prf: { eval: { first: prfSalt } } }
+      }
+    });
+    const ext = assertion.getClientExtensionResults();
+    if (!ext.prf || !ext.prf.results || !ext.prf.results.first) throw new Error('PRF unavailable');
+    const prfOutput = new Uint8Array(ext.prf.results.first);
+    const aesKey = await crypto.subtle.importKey('raw', prfOutput, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const stored = JSON.parse(localStorage.getItem(LS_BIO_PIN));
+    const iv = b64ToU8(stored.iv);
+    const ct = b64ToU8(stored.ct);
+    const pinBytes = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, ct);
+    const pin = new TextDecoder().decode(pinBytes);
+    const v = await loadLocal(pin);
+    if (!v) return false;
+    PIN = pin; vault = v; isDecoy = false;
+    pinStatus('ปลดล็อก','ok'); setTimeout(unlockApp, 200);
+    return true;
+  } catch (e) {
+    pinStatus('Biometric ผิดพลาด · ใช้ PIN แทน','err');
+    setTimeout(() => pinStatus(''), 2000);
+    return false;
+  }
+}
+
+document.getElementById('btnBioUnlock').addEventListener('click', biometricUnlock);
+document.getElementById('btnSetupBio').addEventListener('click', setupBiometric);
+document.getElementById('btnRemoveBio').addEventListener('click', () => {
+  if (!confirm('ปิด biometric? · ใช้ PIN ตามปกติ')) return;
+  clearBio(); refreshSecuritySettings();
+});
+
+function refreshSecuritySettings() {
+  const decoyExists = hasDecoy();
+  document.getElementById('decoyStatus').textContent = decoyExists ? 'Decoy Mode พร้อมใช้ (เข้าด้วย Decoy PIN)' : 'ตอนนี้ยังไม่มี Decoy Mode';
+  document.getElementById('btnSetupDecoy').style.display = decoyExists ? 'none' : '';
+  document.getElementById('btnRemoveDecoy').style.display = decoyExists ? '' : 'none';
+  const bioOK = hasBio();
+  const supported = bioSupported();
+  document.getElementById('bioStatus').textContent = !supported ? 'อุปกรณ์นี้ไม่รองรับ' : (bioOK ? 'Biometric เปิดอยู่ · ปลดล็อกด้วย Face ID / Touch ID ได้' : 'ยังไม่ได้เปิด biometric');
+  document.getElementById('btnSetupBio').style.display = (supported && !bioOK) ? '' : 'none';
+  document.getElementById('btnRemoveBio').style.display = bioOK ? '' : 'none';
 }
 
 // AUTO-LOCK
