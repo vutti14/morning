@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Morning">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FAF7F2">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://api.jsonbin.io; base-uri 'none'; form-action 'none'">
+<title>Morning</title>
+<style>
+:root { color-scheme: light; --ink:#1F1B16; --ink2:#3A342D; --mute:#6B6259; --gold:#8B6F47; --line:#E8E0D3; --soft:#F3EEE3; --bg:#FAF7F2; --red:#B03E2D; --green:#4A7A4A; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Sarabun", "Noto Sans Thai", "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.65; min-height: 100vh; font-size: 15px; -webkit-font-smoothing: antialiased; transition: background-color .8s ease; }
+body.storm { background: #EDEEF0; }
+body.locked { overflow: hidden; }
+body.veil #app, body.veil #gate { filter: blur(24px); }
+button { font-family: inherit; }
+[hidden] { display: none !important; }
+body.decoy [data-real] { display: none !important; }
+
+#app { display: none; padding: 20px 20px 100px; max-width: 680px; margin: 0 auto; }
+body.unlocked #app { display: block; }
+
+/* GATE */
+#gate { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 100; padding: 24px; overflow-y: auto; }
+body.unlocked #gate { display: none; }
+.gate-card { max-width: 360px; width: 100%; text-align: center; }
+.gate-screen { display: none; } .gate-screen.active { display: block; }
+.gate-title { font-family: Georgia, serif; font-size: 34px; font-weight: 400; margin-bottom: 6px; }
+.gate-subtitle { font-size: 12px; color: var(--gold); letter-spacing: .2em; text-transform: uppercase; margin-bottom: 36px; }
+.gate-prompt { font-family: Georgia, serif; font-size: 16px; color: var(--ink2); margin-bottom: 6px; }
+.gate-hint { font-size: 12px; color: var(--gold); margin-bottom: 24px; line-height: 1.5; min-height: 18px; }
+.gate-big-btn { display: block; width: 100%; padding: 14px 20px; background: var(--ink); color: #fff; border: none; border-radius: 100px; font-size: 14px; letter-spacing: .06em; cursor: pointer; margin-bottom: 10px; }
+.gate-big-btn:hover { background: var(--gold); }
+.gate-big-btn.secondary { background: transparent; color: var(--ink); border: 1px solid #D4C9B8; }
+.gate-big-btn.secondary:hover { background: var(--soft); }
+.gate-big-btn:disabled { opacity: .5; cursor: not-allowed; }
+.gate-input { display: block; width: 100%; padding: 12px 16px; background: #fff; border: 1px solid #D4C9B8; border-radius: 6px; font-family: inherit; font-size: 14px; color: var(--ink); margin-bottom: 10px; outline: none; }
+.gate-input:focus { border-color: var(--gold); }
+.lock-dots { display: flex; justify-content: center; gap: 14px; margin-bottom: 30px; }
+.lock-dots .dot { width: 14px; height: 14px; border: 1.5px solid var(--gold); border-radius: 50%; background: #fff; }
+.lock-dots .dot.filled { background: var(--gold); }
+.lock-dots.shake { animation: shake .4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 280px; margin: 0 auto 16px; }
+.np-btn { padding: 0; background: #fff; border: 1px solid var(--line); border-radius: 50%; font-family: Georgia, serif; font-size: 22px; color: var(--ink); cursor: pointer; aspect-ratio: 1; user-select: none; -webkit-user-select: none; }
+.np-btn:active { background: var(--gold); color: #fff; transform: scale(.96); }
+.np-btn.ghost { background: transparent; border-color: transparent; font-size: 13px; font-family: inherit; color: var(--gold); }
+.gate-status { min-height: 20px; font-size: 12px; color: var(--gold); margin-top: 14px; line-height: 1.5; }
+.gate-status.err { color: var(--red); } .gate-status.ok { color: var(--green); }
+.gate-link { margin-top: 18px; display: inline-block; background: none; border: none; color: var(--gold); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; padding: 6px 12px; }
+.spin { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--line); border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.bio-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #fff; border: 1px solid #D4C9B8; border-radius: 100px; font-size: 13px; cursor: pointer; margin-bottom: 18px; color: var(--ink); }
+
+/* TABS */
+.tabs { position: sticky; top: 0; z-index: 20; display: flex; gap: 4px; padding: 6px; margin: 0 auto 18px; max-width: 320px; background: rgba(250,247,242,.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 100px; }
+.tabs button { flex: 1; padding: 8px 10px; border: none; border-radius: 100px; background: transparent; color: var(--mute); font-size: 13px; cursor: pointer; }
+.tabs button.on { background: var(--ink); color: #fff; }
+
+/* BANNER */
+.banner { padding: 14px 18px; border-radius: 4px; margin-bottom: 24px; font-size: 13px; line-height: 1.55; display: none; }
+.banner.amber { background: #F5E6D3; color: #6B4423; border-left: 3px solid #B08968; display: block; }
+.banner.dim { background: #EBE7DE; color: #4A4037; border-left: 3px solid var(--mute); display: block; }
+.banner.storm { background: #DEE3E8; color: #2C3A47; border-left: 3px solid #5A6B7D; display: block; }
+.banner.prestorm { background: #F0E6D8; color: #6B5635; border-left: 3px solid #C9A86A; display: block; }
+.banner strong { display: block; margin-bottom: 2px; letter-spacing: .05em; font-size: 11px; text-transform: uppercase; }
+
+/* HEADER */
+header { text-align: center; padding: 18px 0 36px; border-bottom: 1px solid var(--line); margin-bottom: 44px; position: relative; }
+.header-btns { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+.header-btn { background: none; border: 1px solid #D4C9B8; border-radius: 100px; padding: 5px 11px; font-size: 11px; letter-spacing: .04em; color: var(--gold); cursor: pointer; }
+.header-btn:hover { background: var(--soft); color: var(--ink); }
+.header-btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.sync-ind { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; background: #B3A690; }
+.sync-ind.on { background: var(--green); } .sync-ind.err { background: var(--red); } .sync-ind.busy { background: #B08968; animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.date { color: var(--gold); font-size: 11px; letter-spacing: .2em; margin: 8px 0 16px; text-transform: uppercase; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-size: 40px; font-weight: 400; margin-bottom: 8px; }
+.subtitle { color: var(--mute); font-size: 14px; font-style: italic; }
+.last-visit { font-size: 11px; color: var(--gold); margin-top: 12px; letter-spacing: .08em; }
+.digest-toggle { background: none; border: 1px solid #D4C9B8; border-radius: 100px; padding: 6px 16px; font-size: 11px; letter-spacing: .1em; color: var(--gold); cursor: pointer; margin-top: 10px; }
+
+section { margin-bottom: 48px; }
+h2 { font-family: Georgia, serif; font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; font-weight: 600; }
+.h2row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.h2row h2 { margin: 0; }
+
+/* DIGEST */
+.digest { background: linear-gradient(135deg, #F5EDE0 0%, var(--bg) 100%); padding: 24px; border-radius: 4px; border: 1px solid var(--line); border-top: 3px solid var(--gold); display: none; }
+.digest.show { display: block; }
+.digest-title { font-family: Georgia, serif; font-size: 21px; margin-bottom: 4px; }
+.digest-sub { font-size: 11px; color: var(--gold); letter-spacing: .12em; margin-bottom: 18px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat { background: #fff; padding: 14px 10px; border-radius: 4px; text-align: center; border: 1px solid var(--line); }
+.stat b { display: block; font-family: Georgia, serif; font-size: 22px; font-weight: 400; line-height: 1; }
+.stat span { font-size: 10px; color: var(--mute); letter-spacing: .06em; }
+.digest-section { padding: 10px 0; border-top: 1px solid var(--line); }
+.digest-h { font-size: 10px; color: var(--gold); letter-spacing: .14em; margin-bottom: 6px; }
+.pill { display: inline-block; background: #fff; border: 1px solid #D4C9B8; padding: 2px 9px; border-radius: 10px; font-size: 12px; margin: 2px 3px 2px 0; }
+.digest-reflect { margin-top: 14px; padding: 14px 16px; background: #fff; border-radius: 4px; font-family: Georgia, serif; font-style: italic; font-size: 15px; line-height: 1.55; border-left: 2px solid var(--gold); }
+
+/* BREATH */
+.breath-module { background: linear-gradient(135deg, #DDE4EB 0%, #F0F2F5 100%); padding: 30px 20px; border-radius: 4px; text-align: center; border: 1px solid #C9D2DB; display: none; }
+body.storm .breath-module { display: block; }
+.breath-label { font-size: 10px; color: #5A6B7D; letter-spacing: .2em; text-transform: uppercase; margin-bottom: 14px; }
+.breath-title { font-family: Georgia, serif; font-size: 18px; color: #2C3A47; margin-bottom: 20px; font-style: italic; line-height: 1.5; }
+.breath-stage { width: 170px; height: 170px; margin: 0 auto 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF 0%, #C9D2DB 70%, #8FA2B5 100%); display: flex; align-items: center; justify-content: center; color: #2C3A47; font-family: Georgia, serif; font-style: italic; animation: breathe 19s ease-in-out infinite; }
+@keyframes breathe { 0% { transform: scale(.55); } 21% { transform: scale(1); } 57.9% { transform: scale(1); } 100% { transform: scale(.55); } }
+.breath-text { font-family: Georgia, serif; font-size: 13px; color: #5A6B7D; }
+
+/* NORTH */
+.north-star { background: var(--soft); padding: 24px 24px; border-left: 2px solid var(--gold); border-radius: 0 4px 4px 0; }
+body.storm .north-star { background: #E4E8ED; border-left-color: #5A6B7D; }
+.north-star .line { margin-bottom: 9px; font-size: 14px; color: var(--ink2); }
+.north-star strong { color: var(--ink); font-weight: 600; }
+.pulse { display: block; width: 100%; text-align: left; margin: 14px 0 0; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; color: var(--ink2); cursor: pointer; }
+.pulse b { color: var(--ink); } .pulse .pulse-go { float: right; color: var(--gold); }
+.countdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+.count-block { text-align: center; padding: 15px 6px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+.count-number { font-family: Georgia, serif; font-size: 23px; display: block; margin-bottom: 4px; line-height: 1; }
+.count-label { font-size: 10px; color: var(--mute); letter-spacing: .04em; }
+.trend, .chain-section { margin-top: 12px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: 4px; }
+.trend-label { font-size: 10px; color: var(--gold); letter-spacing: .14em; margin-bottom: 8px; }
+.trend-bars { display: flex; align-items: flex-end; gap: 3px; height: 32px; }
+.trend-bar { flex: 1; background: var(--line); border-radius: 2px 2px 0 0; min-height: 3px; }
+.trend-bar.high { background: #B08968; } .trend-bar.medium { background: #C9B896; } .trend-bar.low { background: #DDD0B8; } .trend-bar.empty { background: var(--soft); }
+.chain-row { margin-bottom: 12px; } .chain-row:last-child { margin-bottom: 0; }
+.chain-row-head { font-size: 10px; color: var(--gold); letter-spacing: .12em; margin-bottom: 6px; display: flex; justify-content: space-between; }
+.chain-row-head b { color: var(--ink); font-family: Georgia, serif; font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.chain-grid { display: grid; grid-template-columns: repeat(30, 1fr); gap: 2px; }
+.chain-cell { aspect-ratio: 1; background: var(--soft); border-radius: 1px; }
+.chain-cell.done { background: #B08968; } .chain-cell.partial { background: #DDD0B8; }
+.chain-cell.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+
+/* QUOTES */
+.morning-q { background: #fff; padding: 36px 28px; border-radius: 4px; border: 1px solid var(--line); text-align: center; position: relative; }
+body.storm .morning-q { background: #F4F6F8; border-color: #C9D2DB; }
+.morning-q::before { content: '"'; position: absolute; top: -4px; left: 20px; font-family: Georgia, serif; font-size: 60px; color: #D4C9B8; line-height: 1; }
+.quote-friend { border-left: 3px solid #B08968; } .quote-monk { border-left: 3px solid #6B5D7A; }
+.question-text { font-family: Georgia, serif; font-size: 19px; line-height: 1.55; margin-bottom: 16px; font-style: italic; }
+.attribution { font-size: 10px; color: var(--gold); letter-spacing: .12em; }
+
+/* CARDS */
+.mirror { background: #fff; padding: 22px 22px; border: 1px solid var(--line); border-radius: 4px; margin-bottom: 12px; }
+body.storm .mirror { background: #F4F6F8; border-color: #D2D9E0; }
+.mirror-title { font-family: Georgia, serif; font-size: 16px; margin-bottom: 4px; }
+.mirror-sub { font-size: 10px; color: var(--gold); margin-bottom: 16px; letter-spacing: .14em; }
+.deep .mirror { border-top: 2px solid #6B5D7A; } .dark .mirror { border-top: 2px solid #4A3F35; } .bright .mirror { border-top: 2px solid #B08968; }
+.silent .mirror { border-top: 2px solid var(--mute); } .commits .mirror { border-top: 2px solid var(--green); }
+.check-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--soft); font-size: 14px; gap: 16px; }
+.check-row:last-child { border-bottom: none; padding-bottom: 2px; }
+.check-row label { color: var(--ink2); flex: 1; min-width: 0; }
+.toggle-group { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.toggle-btn { padding: 6px 12px; font-size: 12px; border: 1px solid #D4C9B8; background: var(--bg); color: var(--mute); border-radius: 20px; cursor: pointer; }
+.toggle-btn.active { background: var(--gold); color: #fff; border-color: var(--gold); }
+.slider-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.slider-wrap input[type=range] { width: 110px; accent-color: var(--gold); }
+input[type=range].untouched { opacity: .45; }
+.slider-value { font-family: Georgia, serif; font-size: 16px; min-width: 22px; text-align: center; }
+.sub-group-label { font-size: 11px; color: #6B5D7A; margin: 14px 0 8px; letter-spacing: .06em; font-weight: 500; }
+.sub-group-label:first-of-type { margin-top: 2px; }
+.tile-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 6px; }
+.tile { padding: 8px 13px; background: var(--bg); border: 1px solid var(--line); border-radius: 100px; font-size: 13px; color: var(--ink2); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; line-height: 1.3; }
+.tile.on { background: var(--gold); color: #fff; border-color: var(--gold); }
+.big-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.big-tile { padding: 12px 4px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; cursor: pointer; text-align: center; line-height: 1.3; color: var(--ink2); }
+.big-tile.on { background: var(--soft); border-color: var(--gold); color: var(--ink); box-shadow: inset 0 0 0 1px var(--gold); }
+.big-tile .emoji { display: block; font-size: 21px; margin-bottom: 3px; }
+.custom-tile-wrap { position: relative; display: inline-flex; }
+.custom-tile-x { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--red); color: #fff; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; border: none; padding: 0; }
+.add-row { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: flex; gap: 6px; flex-wrap: wrap; }
+.add-row .gate-input { flex: 1; min-width: 180px; margin: 0; font-size: 13px; }
+.commits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.commit-tile { padding: 12px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; color: var(--ink2); cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px; line-height: 1.3; }
+.commit-tile.on { background: #E8F3E8; border-color: var(--green); color: var(--ink); }
+.commit-tile.on::after { content: '✓'; margin-left: auto; color: var(--green); font-weight: 700; }
+body.storm .dark .locked-content, body.storm .silent .locked-content { opacity: .4; pointer-events: none; }
+.storm-rest { display: none; padding: 14px 18px; background: #DEE3E8; border-left: 3px solid #5A6B7D; color: #2C3A47; font-size: 13px; margin-bottom: 12px; font-style: italic; }
+body.storm .storm-rest { display: block; }
+
+/* MISSIONS */
+.mission { display: flex; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--soft); }
+.mission:last-child { border-bottom: none; padding-bottom: 2px; }
+.mission-check { width: 22px; height: 22px; border: 1.5px solid var(--gold); border-radius: 50%; margin-right: 14px; flex-shrink: 0; margin-top: 2px; cursor: pointer; background: #fff; position: relative; }
+.mission-check.done { background: var(--gold); }
+.mission-check.done::after { content: '✓'; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; font-weight: 700; }
+.mission-body { flex: 1; min-width: 0; }
+.mission-title { font-size: 14px; margin-bottom: 3px; font-weight: 500; }
+.mission.done .mission-title { text-decoration: line-through; color: var(--gold); }
+.mission-desc { font-size: 12.5px; color: var(--mute); line-height: 1.55; }
+.mission-target { display: inline-block; font-size: 10px; color: var(--gold); background: var(--soft); padding: 2px 9px; border-radius: 10px; margin: 6px 6px 0 0; }
+.mission-step-btn { display: inline-block; font-size: 10px; color: var(--green); background: #fff; border: 1px solid #B8D4B8; padding: 2px 9px; border-radius: 10px; margin-top: 6px; cursor: pointer; }
+.mission-step-btn.stepped { background: var(--green); color: #fff; border-color: var(--green); }
+.badge { display: inline-block; font-size: 10px; padding: 1px 8px; border-radius: 10px; margin-left: 4px; font-weight: 500; vertical-align: 1px; }
+.badge.red { background: #F5E0DC; color: var(--red); } .badge.amber { background: #F5E6D3; color: #8A5A2B; }
+.empty { text-align: center; padding: 18px; color: var(--gold); font-size: 13px; }
+
+/* TENSION + SAVE */
+.tension-section { background: linear-gradient(135deg, var(--soft) 0%, var(--bg) 100%); padding: 26px 22px; border-radius: 4px; text-align: center; border: 1px solid var(--line); }
+.tension-prompt { font-family: Georgia, serif; font-size: 16px; line-height: 1.6; margin-bottom: 18px; font-style: italic; }
+.tension-slider { width: 100%; max-width: 280px; accent-color: var(--gold); }
+.tension-labels { display: flex; justify-content: space-between; max-width: 280px; margin: 4px auto 0; font-size: 10px; color: var(--mute); letter-spacing: .1em; }
+.tension-response { font-size: 13.5px; padding: 14px 18px; background: #fff; border-radius: 4px; margin-top: 18px; line-height: 1.65; border-left: 2px solid var(--gold); text-align: left; }
+.save-row { text-align: center; padding: 20px 0 6px; }
+.save-btn { padding: 14px 36px; background: var(--ink); color: #fff; border: none; border-radius: 100px; font-size: 14px; letter-spacing: .08em; cursor: pointer; }
+.save-btn:disabled { opacity: .5; }
+.save-status { margin-top: 12px; font-size: 12px; color: var(--gold); letter-spacing: .06em; min-height: 16px; }
+footer { text-align: center; padding: 34px 20px 0; border-top: 1px solid var(--line); margin-top: 44px; }
+footer .quote { font-style: italic; font-family: Georgia, serif; font-size: 14px; line-height: 1.6; margin: 0 auto 12px; max-width: 520px; }
+footer .note { font-size: 10px; color: var(--gold); letter-spacing: .14em; }
+
+/* FREEDOM TAB */
+.fin-head { text-align: center; margin: 6px 0 26px; }
+.fin-head h1 { font-size: 30px; }
+.fin-src { font-size: 11px; color: var(--gold); letter-spacing: .06em; }
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.kpi { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 16px 14px; }
+.kpi .k { font-size: 11px; color: var(--mute); letter-spacing: .04em; }
+.kpi .v { font-family: Georgia, serif; font-size: 27px; line-height: 1.15; margin: 6px 0 4px; }
+.kpi .s { font-size: 11px; color: var(--mute); line-height: 1.45; }
+.kpi .s.warn { color: var(--red); }
+.lad { padding: 12px 0; border-bottom: 1px solid var(--soft); }
+.lad:last-child { border-bottom: none; }
+.lad-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.lad-top b { font-family: Georgia, serif; font-weight: 400; font-size: 18px; }
+.lad-w { font-size: 11.5px; color: var(--mute); margin-top: 5px; line-height: 1.5; }
+.bar { height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; margin-top: 7px; }
+.bar i { display: block; height: 100%; background: var(--gold); border-radius: 4px; }
+.bar.done i { background: var(--green); }
+.rk { padding: 8px 0; }
+.rk-top { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink2); }
+.rk-top b { font-weight: 500; color: var(--ink); white-space: nowrap; }
+.rk .bar { height: 6px; margin-top: 5px; }
+.rk-sub { font-size: 11px; color: var(--mute); margin-top: 3px; }
+.note-line { font-size: 12px; color: var(--mute); line-height: 1.55; margin-top: 10px; }
+.note-line.warn { color: #8A3B2D; }
+.flags { list-style: none; }
+.flags li { font-size: 13px; line-height: 1.55; padding: 10px 12px; border-radius: 4px; margin-bottom: 8px; border-left: 3px solid; }
+.flags li.warn { background: #F8ECE8; border-color: var(--red); }
+.flags li.confirm { background: #F5EEDF; border-color: #C9A86A; }
+.flags li.info { background: #EFEDE8; border-color: var(--mute); }
+.flags li span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; display: block; color: var(--mute); }
+.fin-in { display: block; margin-bottom: 10px; }
+.fin-in span { display: block; font-size: 12px; color: var(--mute); margin-bottom: 4px; }
+.fin-in input { width: 100%; padding: 11px 14px; border: 1px solid #D4C9B8; border-radius: 6px; font-size: 15px; font-family: inherit; background: #fff; }
+
+/* OVERLAYS */
+.overlay { position: fixed; inset: 0; background: rgba(31,27,22,.5); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; }
+.overlay.show { display: flex; }
+.overlay-card { background: var(--bg); border-radius: 8px; padding: 26px 22px; max-width: 560px; width: 100%; max-height: 92vh; overflow-y: auto; }
+.overlay-title { font-family: Georgia, serif; font-size: 22px; margin-bottom: 4px; }
+.overlay-sub { font-size: 11px; color: var(--gold); letter-spacing: .1em; margin-bottom: 18px; }
+.set-block { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.set-block:last-child { border-bottom: none; }
+.set-h { font-size: 11px; color: var(--gold); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 8px; }
+.set-label { font-size: 12px; color: var(--mute); margin-bottom: 8px; line-height: 1.55; }
+.set-value { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; word-break: break-all; margin-bottom: 10px; }
+.set-btn { padding: 8px 15px; background: #fff; border: 1px solid #D4C9B8; border-radius: 100px; font-size: 12px; color: var(--ink); cursor: pointer; margin: 4px 6px 0 0; }
+.set-btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.set-btn.danger { color: var(--red); border-color: #E5C3BC; }
+.hw-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+.hw-tab { flex: 1; padding: 10px; background: #fff; border: 1px solid #D4C9B8; border-radius: 6px; font-size: 12px; color: var(--mute); cursor: pointer; }
+.hw-tab.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.hw-preview { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 14px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 360px; overflow-y: auto; color: var(--ink2); }
+.mission-edit-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.mission-edit-item .gate-input { margin-bottom: 6px; font-size: 13px; padding: 8px 12px; }
+
+@media (max-width: 520px) {
+  #app { padding: 14px 14px 80px; font-size: 14px; }
+  h1 { font-size: 31px; }
+  .check-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .toggle-group { justify-content: flex-start; }
+  .count-number { font-size: 20px; }
+  .morning-q { padding: 28px 20px; }
+  .question-text { font-size: 17px; }
+  .big-grid { grid-template-columns: repeat(2, 1fr); }
+  .commits-grid { grid-template-columns: 1fr; }
+  .kpi .v { font-size: 23px; }
+}
+</style>
+</head>
+<body class="locked">
+
+<!-- ================= GATE ================= -->
+<div id="gate">
+  <div class="gate-card">
+    <div id="screenWelcome" class="gate-screen">
+      <div class="gate-title">Morning</div>
+      <div class="gate-subtitle">Private</div>
+      <p class="gate-prompt">ครั้งแรกบนเครื่องนี้?</p>
+      <p class="gate-hint">เริ่มใหม่ หรือดึงข้อมูลเดิมกลับมา</p>
+      <button class="gate-big-btn" id="btnNew" type="button">เริ่มใหม่</button>
+      <button class="gate-big-btn secondary" id="btnRestore" type="button">ต่อจาก cloud</button>
+      <button class="gate-big-btn secondary" id="btnRestoreFile" type="button">กู้จากไฟล์สำรอง</button>
+      <input type="file" id="fileBackupGate" accept="application/json,.json" hidden>
+      <div class="gate-status" id="welcomeStatus"></div>
+    </div>
+    <div id="screenPin" class="gate-screen">
+      <div class="gate-title">Morning</div>
+      <div class="gate-subtitle">Private</div>
+      <p class="gate-prompt" id="pinPrompt">ใส่รหัส 4 หลัก</p>
+      <p class="gate-hint" id="pinHint"></p>
+      <div id="bioUnlockArea" hidden><button class="bio-btn" id="btnBioUnlock" type="button"><span>🔐</span><span>ใช้ Face ID / Touch ID</span></button></div>
+      <div class="lock-dots" id="lockDots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <div class="numpad" id="numpad">
+        <button class="np-btn" data-n="1" type="button">1</button><button class="np-btn" data-n="2" type="button">2</button><button class="np-btn" data-n="3" type="button">3</button>
+        <button class="np-btn" data-n="4" type="button">4</button><button class="np-btn" data-n="5" type="button">5</button><button class="np-btn" data-n="6" type="button">6</button>
+        <button class="np-btn" data-n="7" type="button">7</button><button class="np-btn" data-n="8" type="button">8</button><button class="np-btn" data-n="9" type="button">9</button>
+        <button class="np-btn ghost" data-a="clear" type="button">ลบ</button><button class="np-btn" data-n="0" type="button">0</button><button class="np-btn ghost" data-a="back" type="button">กลับ</button>
+      </div>
+      <div class="gate-status" id="pinStatus"></div>
+      <button class="gate-link" id="gateForgot" type="button" hidden>ลืมรหัส · ล้างเครื่องนี้</button>
+    </div>
+    <div id="screenRestore" class="gate-screen">
+      <div class="gate-title">Morning</div>
+      <div class="gate-subtitle">ต่อจาก cloud</div>
+      <p class="gate-hint">วาง Master Key + Bin ID จากเครื่องเดิม · ใช้ PIN เดิมถอดรหัส</p>
+      <input type="password" class="gate-input" id="restoreKey" placeholder="JSONBin Master Key" autocomplete="off">
+      <input type="text" class="gate-input" id="restoreBin" placeholder="Bin ID" autocomplete="off">
+      <button class="gate-big-btn" id="btnRestoreFetch" type="button">ดึงข้อมูล</button>
+      <button class="gate-link" id="btnRestoreBack" type="button">ย้อนกลับ</button>
+      <div class="gate-status" id="restoreStatus"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<main id="app">
+  <nav class="tabs" id="tabs" data-real hidden>
+    <button type="button" data-tab="mirror" class="on">กระจก</button>
+    <button type="button" data-tab="free">อิสรภาพ</button>
+  </nav>
+
+  <div id="viewMirror">
+    <div class="banner" id="banner"></div>
+    <section><div class="digest" id="digest" data-dyn></div></section>
+
+    <header>
+      <div class="header-btns">
+        <button class="header-btn primary" id="btnHomework" type="button" data-real>📝 การบ้าน</button>
+        <button class="header-btn" id="btnSettings" type="button" data-real><span class="sync-ind" id="syncDot"></span>ตั้งค่า</button>
+        <button class="header-btn" id="lockNowBtn" type="button">🔒 ล็อก</button>
+      </div>
+      <p class="date" id="date"></p>
+      <h1>กระจกชีวิต</h1>
+      <p class="subtitle">มองตัวเองเงียบๆ ก่อนวันเริ่ม</p>
+      <p class="last-visit" id="lastVisit"></p>
+      <button class="digest-toggle" id="digestToggle" type="button" hidden>ดูสรุปสัปดาห์</button>
+    </header>
+
+    <section>
+      <div class="breath-module">
+        <div class="breath-label">โหมดพายุ · Storm Mode</div>
+        <div class="breath-title">วันนี้ยาก ยอมรับว่ายาก<br>คือคำตอบ</div>
+        <div class="breath-stage" id="breathStage">หายใจ</div>
+        <div class="breath-text">หายใจเข้า 4 · หยุด 7 · ออก 8</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ทิศ · North Star</h2>
+      <div class="north-star">
+        <div id="northLines" data-dyn></div>
+        <button class="pulse" id="pulse" type="button" data-real data-dyn hidden></button>
+        <div class="countdown" id="countdown" data-dyn></div>
+        <div class="trend"><div class="trend-label" id="trendLabel">14 วันที่ผ่านมา</div><div class="trend-bars" id="shadowTrend" data-dyn></div></div>
+        <div class="chain-section" data-real>
+          <div class="chain-row"><div class="chain-row-head"><span>90 วัน · บันทึกรายวัน</span><b id="streakCheckin">–</b></div><div class="chain-grid" id="chainCheckin" data-dyn></div></div>
+          <div class="chain-row"><div class="chain-row-head"><span>ศีล 5 ครบ</span><b id="streakSila">–</b></div><div class="chain-grid" id="chainSila" data-dyn></div></div>
+          <div class="chain-row"><div class="chain-row-head"><span>นั่งสมาธิ</span><b id="streakMed">–</b></div><div class="chain-grid" id="chainMed" data-dyn></div></div>
+          <div class="chain-row"><div class="chain-row-head"><span>ขยับร่างกาย</span><b id="streakEx">–</b></div><div class="chain-grid" id="chainEx" data-dyn></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 id="questionHeader">คำถามเช้านี้</h2>
+      <div class="morning-q"><p class="question-text" id="dailyQuestion" data-dyn></p><p class="attribution">จากเพื่อนคุณ</p></div>
+    </section>
+    <section>
+      <h2 id="friendLabel">เตือนสติทางโลก</h2>
+      <div class="morning-q quote-friend"><p class="question-text" id="quoteFriend" data-dyn></p><p class="attribution" id="friendAttr"></p></div>
+    </section>
+    <section>
+      <h2 id="monkLabel">เตือนสติทางธรรม</h2>
+      <div class="morning-q quote-monk"><p class="question-text" id="quoteMonk" data-dyn></p><p class="attribution" id="monkAttr"></p></div>
+    </section>
+
+    <section class="commits" data-real>
+      <h2>การบ้านรายวัน · เรื่องเล็กๆ</h2>
+      <div class="mirror"><div class="mirror-title">Tiny Commitments</div><div class="mirror-sub">แตะที่ทำวันนี้ · เล็กๆ ง่ายๆ ต่อเนื่อง</div><div class="commits-grid" id="commitsGrid" data-dyn></div></div>
+    </section>
+
+    <section><h2>กระจก 4 ด้าน · เช็กอินเช้านี้</h2><div id="secMirrors" data-dyn></div></section>
+    <section class="deep" data-real><h2>มุมลึก · Deep</h2><div id="secDeep" data-dyn></div></section>
+    <section class="dark" id="wrapDark" data-real hidden><h2 id="darkTitle">มุมมืด</h2><div class="storm-rest">วันนี้พายุ — ส่วนนี้พักไว้ก่อน ให้ใจได้หายใจ</div><div class="locked-content" id="secDark" data-dyn></div></section>
+    <section class="bright"><h2>มุมสว่าง · Bright</h2><div id="secBright" data-dyn></div></section>
+    <section class="silent" data-real><h2>บันทึกเงียบ · Silent Journal</h2><div class="storm-rest">วันนี้พายุ — บันทึกเงียบพักไว้</div><div class="locked-content" id="secSilent" data-dyn></div></section>
+
+    <section data-real>
+      <div class="h2row"><h2>ภารกิจ</h2><button class="header-btn" id="btnEditMissions" type="button">+ แก้ไข</button></div>
+      <div class="mirror" id="missionList" data-dyn></div>
+    </section>
+
+    <section>
+      <h2>ความย้อนแย้งวันนี้</h2>
+      <div class="tension-section">
+        <p class="tension-prompt">ใจหนึ่งอยากธรรมะ ใจหนึ่งอยากรวย ใจหนึ่งอยากอิสระ<br>วันนี้ใจไหนพูดเสียงดังที่สุด?</p>
+        <input type="range" min="0" max="10" value="5" class="tension-slider" data-path="tension" aria-label="ความย้อนแย้ง">
+        <div class="tension-labels"><span>สงบ</span><span>กลางๆ</span><span>พายุ</span></div>
+        <div class="tension-response" id="tensionResponse"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="save-row">
+        <button class="save-btn" id="saveBtn" type="button">บันทึกวันนี้</button>
+        <div class="save-status" id="saveStatus"></div>
+      </div>
+    </section>
+
+    <footer><p class="quote" id="closingQuote" data-dyn></p><p class="note">กระจกนี้เฉพาะคุณ · ข้อมูลเข้ารหัสก่อนออกจากเครื่อง</p></footer>
+  </div>
+
+  <div id="viewFree" data-real hidden><div id="freeRoot" data-dyn></div></div>
+</main>
+
+<!-- ================= OVERLAYS ================= -->
+<div class="overlay" id="settingsOverlay">
+  <div class="overlay-card">
+    <div class="overlay-title">ตั้งค่า</div>
+    <div class="overlay-sub">ทุกอย่างเข้ารหัสด้วย PIN ก่อนออกจากเครื่อง</div>
+
+    <div class="set-block">
+      <div class="set-h">Personal Pack</div>
+      <div class="set-label" id="packStatus"></div>
+      <button class="set-btn primary" id="btnImportPack" type="button">นำเข้าไฟล์ morning-pack.json</button>
+      <button class="set-btn danger" id="btnRemovePack" type="button" hidden>ถอด pack</button>
+      <input type="file" id="filePack" accept="application/json,.json" hidden>
+      <div class="set-label" style="font-size:11px;margin-top:8px">เนื้อหาส่วนตัว (คำถาม มุมมืด ภารกิจ ตัวเลขการเงิน) อยู่ในไฟล์นี้เท่านั้น — ไม่อยู่ในหน้าเว็บสาธารณะ · นำเข้าครั้งเดียว แล้ว sync ไปเครื่องอื่นแบบเข้ารหัส</div>
+      <div class="set-label" id="packOpStatus"></div>
+    </div>
+
+    <div class="set-block">
+      <div class="set-h">Cloud sync</div>
+      <div id="syncBlockOff">
+        <div class="set-label">ยังไม่เชื่อม cloud · ข้อมูลอยู่ในเครื่องนี้เท่านั้น</div>
+        <input type="password" class="gate-input" id="setupKey" placeholder="JSONBin Master Key" autocomplete="off">
+        <button class="set-btn primary" id="btnSetupConnect" type="button">สร้าง bin และเริ่ม sync</button>
+        <div class="set-label" id="setupStatus" style="margin-top:8px"></div>
+      </div>
+      <div id="syncBlockOn" hidden>
+        <div class="set-label">Bin ID (ใช้ตอนเพิ่มเครื่องใหม่)</div>
+        <div class="set-value" id="showBinId"></div>
+        <button class="set-btn" id="btnCopyBin" type="button">คัดลอก Bin ID</button>
+        <button class="set-btn" id="btnCopyKey" type="button">คัดลอก Master Key</button>
+        <div class="set-label" style="margin-top:10px">Sync ล่าสุด: <span id="showLastSync">–</span></div>
+        <button class="set-btn primary" id="btnSyncNow" type="button">Sync ตอนนี้</button>
+        <button class="set-btn danger" id="btnDisconnect" type="button">ถอด cloud</button>
+        <div class="set-label" id="syncOpStatus" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="set-block">
+      <div class="set-h">ไฟล์สำรอง</div>
+      <div class="set-label">ดาวน์โหลดข้อมูลทั้งหมดเป็นไฟล์เข้ารหัส (ต้องใช้ PIN ถึงจะเปิดได้) · กันกรณี browser ล้างข้อมูล</div>
+      <button class="set-btn" id="btnExportBackup" type="button">ดาวน์โหลดไฟล์สำรอง</button>
+      <div class="set-label" id="backupStatus" style="margin-top:8px"></div>
+    </div>
+
+    <div class="set-block">
+      <div class="set-h">ทางเข้า</div>
+      <div class="set-label" id="bioStatus"></div>
+      <button class="set-btn primary" id="btnSetupBio" type="button" hidden>เปิด Face ID / Touch ID</button>
+      <button class="set-btn danger" id="btnRemoveBio" type="button" hidden>ปิด biometric</button>
+      <div class="set-label" id="decoyStatus" style="margin-top:14px"></div>
+      <button class="set-btn" id="btnSetupDecoy" type="button">สร้าง Decoy PIN</button>
+      <button class="set-btn danger" id="btnRemoveDecoy" type="button" hidden>ลบ Decoy</button>
+      <div class="set-label" style="font-size:11px;margin-top:8px">Decoy = PIN สำรองที่เปิดหน้าเรียบๆ ไม่มีมุมส่วนตัว ไม่มีแท็บการเงิน และไม่มีป้ายบอกว่าเป็น decoy</div>
+      <div class="set-label" id="setupOpStatus"></div>
+    </div>
+    <div class="set-block"><button class="set-btn" id="btnCloseSettings" type="button">ปิด</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="pinOverlay">
+  <div class="overlay-card" style="max-width:360px;text-align:center">
+    <div class="overlay-title" id="pinOverlayTitle">ตั้ง Decoy PIN</div>
+    <div class="overlay-sub" id="pinOverlaySub">4 หลัก · ห้ามตรงกับ PIN จริง</div>
+    <div class="lock-dots" id="pinOverlayDots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="numpad" id="pinOverlayNumpad" style="max-width:240px">
+      <button class="np-btn" data-n="1" type="button">1</button><button class="np-btn" data-n="2" type="button">2</button><button class="np-btn" data-n="3" type="button">3</button>
+      <button class="np-btn" data-n="4" type="button">4</button><button class="np-btn" data-n="5" type="button">5</button><button class="np-btn" data-n="6" type="button">6</button>
+      <button class="np-btn" data-n="7" type="button">7</button><button class="np-btn" data-n="8" type="button">8</button><button class="np-btn" data-n="9" type="button">9</button>
+      <button class="np-btn ghost" data-a="po-clear" type="button">ลบ</button><button class="np-btn" data-n="0" type="button">0</button><button class="np-btn ghost" data-a="po-cancel" type="button">ยกเลิก</button>
+    </div>
+    <div class="set-label" id="pinOverlayStatus"></div>
+  </div>
+</div>
+
+<div class="overlay" id="missionOverlay">
+  <div class="overlay-card">
+    <div class="overlay-title">จัดการภารกิจ</div>
+    <div class="overlay-sub">เพิ่ม · แก้ไข · ลบ · ตั้งวันกำหนด</div>
+    <div id="missionEditList" data-dyn></div>
+    <div class="set-block">
+      <div class="set-h">เพิ่มภารกิจใหม่</div>
+      <input type="text" class="gate-input" id="newMissionTitle" placeholder="ชื่อภารกิจ">
+      <input type="text" class="gate-input" id="newMissionDesc" placeholder="คำอธิบาย (ไม่ใส่ก็ได้)">
+      <input type="date" class="gate-input" id="newMissionDue" aria-label="วันกำหนด">
+      <button class="set-btn primary" id="btnAddMission" type="button">เพิ่มภารกิจ</button>
+      <div class="set-label" id="missionAddStatus" style="margin-top:8px"></div>
+    </div>
+    <div class="set-block"><button class="set-btn" id="btnCloseMissionEdit" type="button">ปิด</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="homeworkOverlay">
+  <div class="overlay-card">
+    <div class="overlay-title">การบ้านถึงเพื่อน</div>
+    <div class="overlay-sub">สร้าง report → คัดลอก → วางในแชทกับ Claude</div>
+    <div class="hw-tabs">
+      <button class="hw-tab active" data-tab="daily" type="button">รายวัน</button>
+      <button class="hw-tab" data-tab="weekly" type="button">รายสัปดาห์</button>
+      <button class="hw-tab" data-tab="monthly" type="button">รายเดือน</button>
+    </div>
+    <div class="hw-preview" id="hwPreview" data-dyn></div>
+    <div style="text-align:center;margin-top:12px">
+      <button class="set-btn primary" id="btnHwCopy" type="button">คัดลอก report</button>
+      <button class="set-btn" id="btnHwClose" type="button">ปิด</button>
+    </div>
+    <div class="set-label" id="hwStatus" style="margin-top:8px;text-align:center"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================================
+   Morning v4 — public shell. Contains NO personal content.
+   Personal content + finance live only inside the encrypted vault (Personal Pack).
+   ========================================================================= */
+
+// ---------- utils
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad2 = n => String(n).padStart(2, '0');
+const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function localDate(d = new Date()) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function parseYMD(s) { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); }
+function dayDiff(a, b) { return Math.round((parseYMD(b) - parseYMD(a)) / 864e5); }
+function monthDiff(ymA, ymB) { const [ya, ma] = ymA.split('-').map(Number), [yb, mb] = ymB.split('-').map(Number); return (yb - ya) * 12 + (mb - ma); }
+function dayOfYear(d = new Date()) { return dayDiff(`${d.getFullYear() - 1}-12-31`, localDate(d)); }
+const TH_M = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_MS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TH_D = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const thShort = ymd => { const d = parseYMD(ymd); return `${d.getDate()} ${TH_MS[d.getMonth()]} ${d.getFullYear() + 543}`; };
+const thMonth = ym => { const [y, m] = ym.split('-').map(Number); return `${TH_MS[m - 1]} ${String(y + 543).slice(2)}`; };
+function fmtM(n) { if (n == null || !isFinite(n)) return '–'; const a = Math.abs(n) / 1e6; return (n / 1e6).toFixed(a >= 10 ? 1 : 2) + ' ล้าน'; }
+const fmtB = n => (n == null || !isFinite(n)) ? '–' : Math.round(n).toLocaleString('en-US');
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const fill = (t, o) => String(t).replace(/\{(\w+)\}/g, (_, k) => o[k] ?? '');
+function getPath(o, p) { return p.split('.').reduce((a, k) => a == null ? undefined : a[k], o); }
+function setPath(o, p, v) { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach(k => { a[k] = a[k] || {}; a = a[k]; }); a[ks[ks.length - 1]] = v; }
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+const unlocked = () => document.body.classList.contains('unlocked');
+
+// ---------- crypto (AES-256-GCM, key = PBKDF2(PIN, salt))
+const ITER = 150000;
+const u8ToB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s); };
+const b64ToU8 = b64 => { const s = atob(b64); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
+async function deriveKey(pin, salt) {
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: ITER, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function encryptObj(obj, pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pin, salt);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
+  return { salt: u8ToB64(salt), iv: u8ToB64(iv), ct: u8ToB64(new Uint8Array(ct)) };
+}
+async function decryptObj(b, pin) {
+  const key = await deriveKey(pin, b64ToU8(b.salt));
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToU8(b.iv) }, key, b64ToU8(b.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+// ---------- storage keys (unchanged from v2/v3 so existing data keeps working)
+const LS = { data: 'k_data_v2', decoy: 'k_decoy_v1', bioCred: 'k_bio_cred', bioSalt: 'k_bio_salt', bioPin: 'k_bio_pin' };
+
+// ---------- generic content (safe to be public)
+const GENERIC = {
+  profile: null,
+  northStar: [['ปลายทาง', 'ใช้ชีวิตนี้ให้คุ้ม — สงบขึ้นทุกปี ไม่ใช่แค่มีมากขึ้น'], ['ปีนี้', 'ทำเรื่องสำคัญให้น้อยลง แต่ลึกขึ้น'], ['ระวัง', 'สิ่งที่ดูเหมือนอิสระ แต่จริงๆ คือกรงใหม่']],
+  labels: {},
+  questions: [
+    'เช้านี้ใจตื่นมาพร้อมความอยากอะไรเป็นอย่างแรก — แล้วมันพาไปทางไหน?', 'วันนี้คุณจะเลือก "ลึก" หรือ "กว้าง"?', 'ลองนึกภาพตัวเองตอนอายุ 70 — เขายิ้มแบบไหน?',
+    'ความตื่นเต้นที่ตามหา ต่างจากความสุขจริงตรงไหน?', 'ศีลข้อไหนที่ "เกือบ" พลาดเมื่อวาน?', 'สิ่งที่เรียกว่า "อิสระ" กับ "การหลบหนี" ต่างกันตรงไหน?',
+    'บุญที่มีอยู่ — วันนี้คุณเพิ่ม หรือใช้?', 'ถ้าต้องเขียนคำจารึกตัวเอง 1 ประโยค วันนี้จะเขียนว่าอะไร?', 'คนใกล้ตัวขออะไรเงียบๆ อยู่ไหม?',
+    'สิบปีก่อนคุณคงอิจฉาตัวเองวันนี้ — แล้วทำไมยังไม่พอ?', 'อิสระที่แท้ คือทำอะไรก็ได้ หรือ "ไม่ต้องการทำอะไร"?', 'ร่างกายพยายามบอกอะไรอยู่ — ฟังแล้วหรือยัง?',
+    'วันนี้ปล่อยให้ทีมตัดสินใจแทนสักเรื่องได้ไหม?', 'วันนี้มีอะไรที่ "ซื้อได้" แต่เลือกไม่ซื้อ?', 'มีใคร 1 คนที่ถ้าคุณหายไปเขาจะเสียใจจริง — วันนี้ทักเขาไหม?',
+    'ถ้าวันนี้ไม่ต้องพิสูจน์อะไรกับใครเลย คุณจะทำอะไร?', 'เรื่องไหนที่คุณรู้คำตอบอยู่แล้ว แต่ยังไม่อยากได้ยิน?', 'คืนนี้จะนอนในห้องของคุณ หรือในห้องของความคิด?',
+    'ความเหงาวันนี้ต้องการคน หรือต้องการเวลากับตัวเอง?', 'อะไรที่คุณทำซ้ำทุกวันโดยไม่ได้เลือกจริงๆ?', 'เวลาถามตัวเองว่า "ทำแบบนี้ถูกไหม" — ใครเป็นคนตอบ?',
+    'ถ้าเงินไม่ใช่ตัวแปรแล้ว ความกลัวที่เหลือคืออะไร?', 'วันนี้จะรักษาคำพูดกับตัวเองข้อไหน?', 'ถ้าพรุ่งนี้ไม่มา วันนี้ใครควรได้ยินคำขอบคุณ?'
+  ],
+  stormQuestions: [
+    'วันนี้ยาก — ยอมรับว่ายาก คือคำตอบ', 'ไม่ต้องแก้อะไรวันนี้ แค่อยู่ให้ถึงพรุ่งนี้', 'ใจที่พายุไม่บอกความจริง — รอให้นิ่งก่อนค่อยฟัง',
+    'วันนี้ไม่ต้องเก่ง ไม่ต้องตัดสินใจ ไม่ต้องเข้าใจ — แค่หายใจ', 'หายใจเข้า 4 · หยุด 7 · ออก 8 · แค่นี้พอสำหรับวันนี้', 'ความอยากในวันพายุคือเสียงที่โกหกที่สุด — ให้มันผ่านไป',
+    'ไม่มีการตัดสินใจใดที่ดีพอตอนพายุ — พรุ่งนี้ค่อยคิด', 'ให้ความกรุณากับตัวเองวันนี้ เหมือนที่จะให้เพื่อนที่กำลังเจ็บ'
+  ],
+  friendLabel: 'เตือนสติทางโลก', friendAttr: 'จากเพื่อน', monkLabel: 'เตือนสติทางธรรม', monkAttr: 'จากพระอาจารย์',
+  friendQuotes: [
+    'คนที่สำเร็จแล้วมักถามคำถามเดิม — "แล้วไงต่อ?" คำตอบไม่ได้อยู่ข้างนอก อยู่ในคำถามนั้นเอง', 'เราสะสมสิ่งต่างๆ เพื่อรู้สึกปลอดภัย แต่สิ่งที่สะสมมากที่สุดคือความกลัวว่ามันจะหาย',
+    'เวลาเบื่อคน อาจไม่ใช่เพราะเขาน่าเบื่อ แต่เพราะเราไม่ได้ฟังเขาอีกต่อไป', 'คนที่เก่งที่สุด คือคนที่รู้ว่าตัวเองไม่ได้เก่งที่สุด',
+    'ความรวยที่แท้ ไม่ใช่การมีทุกอย่าง แต่คือการไม่ต้องการทุกอย่าง', 'ความเหงาไม่ได้หายไปตอนมีคนอยู่ด้วย — มันหายตอนเราอยู่กับตัวเองได้',
+    'เราให้คุณค่ากับสิ่งที่หายาก แต่ลืมว่าเวลาเองก็หายาก', 'คำตอบที่เรากลัวที่สุด มักเป็นคำตอบที่ตรงที่สุด',
+    'ถ้าชีวิตคือการเดินทาง ปลายทางไม่ใช่สถานที่ แต่คือคนที่เราเป็นเมื่อไปถึง', 'เรามักบอกตัวเองว่าจะเปลี่ยน วันจันทร์ ปีใหม่ หลังเกษียณ — แล้วไม่เคยเปลี่ยน เพราะวันนี้ไม่เคยมา',
+    'เราเบื่อเพราะเราไม่สนใจอะไรพอ ไม่ใช่เพราะไม่มีอะไรน่าสนใจ', 'เวลาเราโกรธใคร ที่จริงเรากำลังโกรธตัวเองผ่านเขา',
+    'ความสำเร็จที่ไม่มีใครเห็น คือความสำเร็จที่แท้จริง', 'เงินซื้อได้หลายอย่าง ยกเว้นการรู้ว่า "พอ"',
+    'เราหาคำตอบทุกวัน แต่ลืมว่าบางคำถามไม่ได้ต้องการคำตอบ มันต้องการเวลา', 'เราใช้ 20 ปีสร้างความสำเร็จ แล้ว 20 ปีถัดไปหาความหมาย — อย่าสับลำดับ',
+    'บางทีคำตอบที่เรามองหา คือการหยุดมองหา', 'ทุกความสัมพันธ์มีวันหมดอายุ — เราแค่ไม่รู้ว่าเมื่อไหร่ เลยควรจริงใจวันนี้'
+  ],
+  monkQuotes: [
+    'ทุกข์ไม่ใช่ศัตรู · คือครูคนแรกที่พาเราเข้าหาทางพ้นทุกข์', 'เราเกิดมาไม่ได้เอาอะไรมา · จะเอาอะไรไปก็ไม่ได้ · เหลือแต่กรรมที่ทำไว้',
+    'โลภ โกรธ หลง ไม่ใช่ศัตรู เป็นเพื่อนเก่า · รู้จักเขาให้ชัด อย่ากลัว อย่าต่อต้าน แค่เห็น', 'ความสุขไม่ได้อยู่ที่ได้ตามใจ · แต่อยู่ที่ใจไม่ต้องการอะไรตาม',
+    'อัตตาคือกำแพงที่เรายกขึ้นปิดตัวเอง', 'จิตที่ดูตัวเองได้ ไม่มีใครทำร้ายได้', 'ทุกลมหายใจที่รู้ตัว คือการเกิดใหม่ครั้งเล็กๆ',
+    'อย่าเชื่อความคิดของตัวเองทั้งหมด · มันเกิดจากเหตุ ดับโดยเหตุ ไม่ใช่เรา', 'การรักษาศีล ไม่ใช่การบังคับตัวเอง · แต่คือการให้ของขวัญแก่คนอื่น',
+    'อิสระที่แท้ คือไม่ถูกผูกโดยความอยาก · และไม่ถูกผูกโดยความไม่อยาก', 'ความดีที่ทำโดยไม่ให้ใครรู้ มีพลังกว่าความดีที่อวด',
+    'การปล่อยวาง ไม่ใช่การไม่แคร์ · แต่คือการแคร์แบบไม่ยึด', 'ผู้ที่เห็นทุกข์ได้ครบ คือผู้ที่เริ่มพ้นทุกข์',
+    'ใจที่ฝึกดีแล้ว · รับทุกข์ได้โดยไม่ทุกข์ · รับสุขได้โดยไม่เพลิน', 'ธรรมะไม่ได้อยู่ในวัด · อยู่ในใจที่ตื่น',
+    'อย่ารอใช้ชีวิตตอนเกษียณ · เกษียณคือสิ่งที่ต้องทำเดี๋ยวนี้ในใจ', 'สมาธิไม่ใช่การทำให้ใจว่าง · แต่คือการดูใจโดยไม่เติมอะไรเข้าไป',
+    'ก่อนตายเรานอนบนเตียงคนเดียว ไม่มีใครตามไปได้ · ฝึกอยู่กับตัวเองตั้งแต่วันนี้'
+  ],
+  closingQuotes: [
+    'คุณไม่ได้ขาดอะไร — แค่ยังไม่เคยอยู่ลึกพอให้รู้สึกเต็ม', 'คนที่หนีตัวเองไปหาสิ่งใหม่เรื่อยๆ คือคนที่ยังไม่เคยอยู่กับตัวเองนานพอ',
+    'ของขวัญที่ดีที่สุดของชาตินี้ คือเวลาที่ยังเหลือ', 'อิสระที่แท้ คือการไม่ต้องการอะไรจากภายนอก', 'เงินเยอะ เวลาเยอะ แต่เพื่อนแท้ไม่มี — คือความเสี่ยงที่ไม่อยู่ในงบ'
+  ],
+  trend: { path: 'tension', label: 'ความย้อนแย้ง' },
+  darkTitle: '', dark: null, alerts: {}, finance: null
+};
+const PACK_KEYS = ['profile', 'northStar', 'labels', 'questions', 'stormQuestions', 'friendLabel', 'friendAttr', 'monkLabel', 'monkAttr', 'friendQuotes', 'monkQuotes', 'closingQuotes', 'trend', 'darkTitle', 'dark', 'alerts', 'finance'];
+
+// ---------- section schemas (generic)
+const COMMITS = [['sit', '🧘', 'นั่งสมาธิ 5–10 น.'], ['move', '🚶', 'เดิน/ขยับ 10+ น.'], ['water', '💧', 'ดื่มน้ำ 8 แก้ว'], ['dharma', '📚', 'อ่าน/ฟังธรรม 5 น.'], ['wife', '💕', 'ทักคนรักอย่างมีใจ'], ['parents', '📞', 'ทักพ่อแม่'],
+  ['chant', '📿', 'สวดพุทโธ 1 รอบ'], ['sun', '🌳', 'ออกแดด/ธรรมชาติ'], ['exercise', '🏋️', 'ออกกำลังจริง 30+ น.'], ['eatslow', '🍽️', 'กินช้ามีสติ 1 มื้อ'], ['phoneoff', '📵', 'พักจากมือถือ 30+ น.'], ['thanks', '🙏', 'ขอบคุณใครอย่างมีใจ']];
+const MIRRORS = [
+  { title: 'ธรรมะ + ใจ', sub: 'Dharma & Mind', rows: [
+    { t: 'toggle', key: 'sila', label: 'ศีล 5 วันนี้', opts: [['yes', 'ครบ'], ['almost', 'เกือบ'], ['no', 'ยังไม่']] },
+    { t: 'toggle', key: 'med', label: 'นั่งสมาธิ / ดูลมหายใจ', opts: [['no', 'ยัง'], ['short', '5–15 น.'], ['long', '20+ น.']] },
+    { t: 'toggle', key: 'truth', label: 'พูดความจริงกับตัวเองไหม', opts: [['yes', 'จริง'], ['mixed', 'ครึ่งๆ'], ['no', 'หลอก']] }] },
+  { title: 'สุขภาพ + ร่างกาย', sub: 'Health & Body', rows: [
+    { t: 'slider', path: 'mirrors.sleep', label: 'นอนคืนก่อน', min: 1, max: 10 },
+    { t: 'toggle', key: 'move', label: 'ขยับตัววันนี้', opts: [['none', 'ไม่ได้'], ['little', '< 20 น.'], ['good', '30+ น.']] },
+    { t: 'toggle', key: 'gut', label: 'ระบบขับถ่ายวันนี้', opts: [['ok', 'โอเค'], ['rush', 'เร่งด่วน'], ['bad', 'ผิดปกติ']] },
+    { t: 'toggle', key: 'food', label: 'กินตามที่ตั้งใจ', opts: [['yes', 'ครบ'], ['partial', 'บางส่วน'], ['no', 'ไม่']] }] },
+  { title: 'งาน + อิสรภาพ', sub: 'Work & Freedom', rows: [
+    { t: 'toggle', key: 'focus', label: 'โฟกัสงานใหญ่ 1 ชิ้น', opts: [['yes', 'ใช่'], ['scattered', 'กระจาย'], ['no', 'ไม่ได้ทำ']] },
+    { t: 'toggle', key: 'delegate', label: 'ปล่อยให้ทีมตัดสินใจแทน 1 เรื่อง', opts: [['yes', 'ปล่อย'], ['no', 'ยัง']] },
+    { t: 'toggle', key: 'spend', label: 'ใช้จ่ายวันนี้', opts: [['need', 'จำเป็น'], ['mixed', 'กลางๆ'], ['escape', 'เพื่อหนี']] }] },
+  { title: 'ความสัมพันธ์', sub: 'Relationships', rows: [
+    { t: 'toggle', key: 'wife', label: 'อยู่กับคนรักจริงๆ (ไม่จับมือถือ)', opts: [['yes', 'ใช่'], ['abit', 'นิดหน่อย'], ['no', 'ไม่เลย']] },
+    { t: 'toggle', key: 'parents', label: 'ทักพ่อ / แม่', opts: [['yes', 'ทัก'], ['no', 'ยัง']] },
+    { t: 'toggle', key: 'friend', label: 'เพื่อนที่เลือก "ลึก"', opts: [['yes', 'ติดต่อ'], ['no', 'ยัง']] }] }
+];
+const DEEP = [
+  { t: 'multi', key: 'shadow', title: 'เงาที่ซ่อน · โลภ โกรธ หลง', sub: '3 รากของทุกข์ · แตะทุกข้อที่เห็นในใจวันนี้', groups: [
+    { label: 'โลภ — อยากได้ อยากเสพ อยากครอง', opts: [['greed', '💰', 'อยากได้อีก'], ['lust', '🌊', 'อยากเสพ'], ['own', '🔒', 'อยากครอง'], ['ego', '👑', 'อยากเด่น']] },
+    { label: 'โกรธ — ไม่พอใจ เอาชนะ ตัดสิน', opts: [['anger', '🔥', 'ฉุน ไม่พอใจ'], ['compete', '⚔️', 'แข่งเอาชนะ'], ['judge', '👁️', 'ตัดสินคน'], ['block', '🚧', 'กั้นไม่ให้เข้า']] },
+    { label: 'หลง — ลืมตัว สวมหน้ากาก ยึดติด', opts: [['delude', '🌀', 'หลงตัวตน'], ['mask', '🎭', 'สวมหน้ากาก'], ['attach', '🔗', 'ผูกพันยึดติด'], ['confuse', '🌫️', 'สับสน ลืมทาง']] }] },
+  { t: 'single', key: 'karma', title: 'กรรม · ความรู้สึกภายใน', sub: 'เลือก 1', opts: [['light', '✨', 'วันเบา'], ['haze', '🌫️', 'มีหมอก'], ['ripen', '⚡', 'รู้สึกสุก'], ['accumul', '🌊', 'กำลังสะสม']] },
+  { t: 'single', key: 'mortality', title: 'ถ้าพรุ่งนี้ไม่มา', sub: 'Memento Mori · เลือก 1', opts: [['ready', '🌿', 'พร้อม'], ['adjust', '🌾', 'ปรับได้'], ['notyet', '🌪️', 'ยังไม่'], ['avoid', '🌌', 'ไม่กล้าคิด']] },
+  { t: 'single', key: 'leans', title: 'ตอนนี้ใจเอนไปทางไหน', sub: 'เลือก 1', opts: [['lobha', '🔥', 'โลภ อยากเพิ่ม'], ['dosa', '⚡', 'โกรธ อยากผลัก'], ['moha', '🌫️', 'หลง อยากลืม'], ['balanced', '🌳', 'ไม่เอน สมดุล']] },
+  { t: 'single', key: 'toRelease', title: 'สัปดาห์นี้ต้องลดอะไรมากที่สุด', sub: 'เลือก 1', opts: [['want', '💰', 'ลดการอยากได้'], ['win', '🔥', 'ลดการเอาชนะ'], ['mask', '🎭', 'ลดการสวมหน้ากาก'], ['hide', '🕯️', 'ลดความลับ']] }
+];
+const BRIGHT = [
+  { t: 'multi', key: 'merits', title: 'บุญเล็กๆ วันนี้', sub: 'Small Merits', opts: [['callparent', '📞', 'ทักพ่อแม่'], ['give', '🤲', 'ให้ทาน'], ['smile', '😊', 'ยิ้มให้คน'], ['forgive', '🙏', 'อโหสิ'], ['calm', '🍃', 'ไม่โกรธตอบ'], ['help', '🌸', 'ช่วยคน'], ['chant', '🕉️', 'สวดมนต์'], ['sit', '🧘', 'นั่งสมาธิ'], ['letgo', '🌊', 'ปล่อยวาง'], ['bow', '🙇', 'กราบผู้ใหญ่'], ['listen', '👂', 'ฟังจริงๆ'], ['praise', '💐', 'ชมคน']] },
+  { t: 'multi', key: 'beauty', title: 'ความงามที่เห็นวันนี้', sub: 'Beauty Witnessed', opts: [['arch', '🏛️', 'สถาปัตยกรรม'], ['nature', '🌳', 'ธรรมชาติ'], ['face', '👤', 'ใบหน้าใคร'], ['art', '🎨', 'ศิลปะ'], ['history', '📜', 'ประวัติศาสตร์'], ['light', '🌅', 'แสง'], ['dialog', '💫', 'บทสนทนา'], ['sound', '🎵', 'เสียง'], ['space', '🏮', 'พื้นที่'], ['word', '✍️', 'คำ'], ['idea', '💡', 'ความคิด'], ['miss', '❌', 'ไม่ทันเห็น']] },
+  { t: 'multi', key: 'gratitude', title: 'ขอบคุณเงียบๆ', sub: 'Silent Gratitude', opts: [['home', '🏠', 'บ้าน'], ['family', '👨‍👩‍👧', 'ครอบครัว'], ['wife', '❤️', 'คนรัก'], ['work', '💼', 'งาน'], ['wealth', '💰', 'เงิน'], ['friends', '👥', 'เพื่อน'], ['teacher', '🙏', 'ครูอาจารย์'], ['nation', '🌏', 'ประเทศไทย'], ['knowledge', '📚', 'ความรู้'], ['freedom', '🕊️', 'เสรีภาพ'], ['health', '💪', 'สุขภาพ'], ['ai', '🤖', 'AI']] }
+];
+const SILENT = [
+  { t: 'multi', key: 'mood', title: 'อารมณ์วันนี้', sub: 'Mood Palette', opts: [['letgo', '😌', 'ปล่อยวาง'], ['sad', '🌧️', 'เศร้า'], ['hot', '🔥', 'ร้อน'], ['deceive', '😈', 'หลอก'], ['void', '🌊', 'ว่าง'], ['kind', '🌸', 'กรุณา'], ['anger', '⚡', 'โกรธ'], ['hide', '🗝️', 'ซ่อน'], ['calm', '🌳', 'สงบ'], ['mask', '🎭', 'สวมหน้ากาก'], ['honest', '🪞', 'ซื่อ'], ['lonely', '🌙', 'เหงา'], ['light', '💫', 'เบา'], ['erupt', '🌋', 'ปะทุ'], ['flow', '🍃', 'ไหล'], ['heavy', '🪨', 'หนัก']] },
+  { t: 'single', key: 'metaphor', title: 'ภาพที่ใช่กับวันนี้', sub: 'Metaphor · เลือก 1', opts: [['peak', '🏔️', 'ยอดเขา'], ['abyss', '🕳️', 'เหว'], ['path', '🛤️', 'ทางเดิน'], ['wave', '🌊', 'คลื่น'], ['island', '🏝️', 'เกาะ'], ['tree', '🌳', 'ต้นไม้'], ['bird', '🕊️', 'นก'], ['key', '🗝️', 'กุญแจ'], ['lock', '🔒', 'ปิดกุญแจ'], ['fire', '🔥', 'ไฟ'], ['drop', '💧', 'หยดน้ำ'], ['sprout', '🌱', 'หน่อ']] },
+  { t: 'multi', key: 'statements', custom: true, title: 'ประโยคเงียบ', sub: 'Quiet Statements · เพิ่มประโยคของคุณเองได้', opts: [['still_good', '✓', 'วันนี้ผมยังดีอยู่'], ['missed', '·', 'วันนี้ผมพลาดบางอย่าง'], ['tooproud', '·', 'วันนี้ผมเก่งเกินไป'], ['lonely', '·', 'วันนี้ผมเหงา'], ['wantrun', '·', 'วันนี้ผมอยากหลบหนี'], ['wanthold', '·', 'วันนี้ผมอยากถูกโอบกอด'], ['wantbe_other', '·', 'วันนี้ผมอยากเป็นคนอื่น'], ['wantbe_self', '·', 'วันนี้ผมอยากเป็นตัวเอง'], ['see_dharma', '·', 'วันนี้ผมเห็นธรรม'], ['feel_karma', '·', 'วันนี้ผมรู้สึกมีกรรม'], ['grateful', '·', 'วันนี้ผมสำนึกบุญคุณ'], ['sorry', '·', 'วันนี้ผมขอโทษเงียบๆ'], ['tired', '·', 'วันนี้ผมเหนื่อย'], ['peace', '·', 'วันนี้ผมสงบพอ']] }
+];
+
+// ---------- runtime state
+let PIN = null, vault = null, isDecoy = false;
+let C = buildContent(null);
+let LBLX = {};
+const emptyState = () => ({ mirrors: {}, shadow_pull: null, tension: null, commits: [], missionSteps: {}, multi: {}, single: {} });
+let state = emptyState(), stateDate = localDate();
+let dirty = false, autoTimer = null, saving = Promise.resolve();
+
+function buildContent(pack) {
+  const c = clone(GENERIC);
+  if (pack) for (const k of PACK_KEYS) if (pack[k] != null) c[k] = clone(pack[k]);
+  c.labels = c.labels || {}; c.alerts = c.alerts || {};
+  return c;
+}
+function normState(s) { s = s || {}; return { mirrors: s.mirrors || {}, shadow_pull: s.shadow_pull ?? null, tension: s.tension ?? null, commits: s.commits || [], missionSteps: s.missionSteps || {}, multi: s.multi || {}, single: s.single || {} }; }
+function normalizeVault(v) {
+  v = v || {};
+  v.history = Array.isArray(v.history) ? v.history : [];
+  // v2/v3 entries stored a UTC date — recompute from the timestamp in local time, then keep one entry per day (latest wins)
+  v.history.forEach(h => { if (h.v !== 4 && h.savedAt) h.date = localDate(new Date(h.savedAt)); });
+  const m = {}; v.history.forEach(h => { if (!h.date) return; const c = m[h.date]; if (!c || (h.savedAt || '') >= (c.savedAt || '')) m[h.date] = h; });
+  v.history = Object.values(m).sort((a, b) => a.date.localeCompare(b.date));
+  v.monthly = v.monthly || {}; v.missionStatus = v.missionStatus || {};
+  v.missions = Array.isArray(v.missions) ? v.missions : null;
+  v.customStatements = Array.isArray(v.customStatements) ? v.customStatements : [];
+  v.financeLog = Array.isArray(v.financeLog) ? v.financeLog : [];
+  v.pack = v.pack || null; v.version = 4;
+  return v;
+}
+const getMissions = () => (vault && vault.missions) || [];
+const byDate = () => { const m = {}; (vault ? vault.history : []).forEach(h => { m[h.date] = h; }); return m; };
+function recentDays(n, end = localDate()) { const out = [], e = parseYMD(end); for (let i = n - 1; i >= 0; i--) { const d = new Date(e); d.setDate(d.getDate() - i); out.push(localDate(d)); } return out; }
+function recentEntries(withinDays = 7) { const from = recentDays(withinDays)[0]; return vault.history.filter(h => h.date >= from).sort((a, b) => b.date.localeCompare(a.date)); }
+const optLabel = (key, v, fb) => C.labels[key + ':' + v] || fb;
+const rowLabel = (key, fb) => C.labels[key] || fb;
+
+// ---------- persistence
+async function persistVault() {
+  if (!PIN || !vault) return false;
+  const bundle = await encryptObj(vault, PIN);
+  return lsSet(isDecoy ? LS.decoy : LS.data, JSON.stringify(bundle));
+}
+function persistQueued() { saving = saving.then(persistVault, persistVault); return saving; }
+async function loadBundle(key, pin) {
+  const raw = lsGet(key); if (!raw) return null;
+  try { return normalizeVault(await decryptObj(JSON.parse(raw), pin)); } catch (e) { return null; }
+}
+function upsertToday() {
+  const entry = Object.assign(clone(state), { date: stateDate, savedAt: new Date().toISOString(), v: 4 });
+  const i = vault.history.findIndex(h => h.date === stateDate);
+  if (i >= 0) vault.history[i] = entry; else { vault.history.push(entry); vault.history.sort((a, b) => a.date.localeCompare(b.date)); }
+  if (vault.history.length > 1100) vault.history = vault.history.slice(-1100);
+}
+function markDirty() { dirty = true; setSaveLabel(); clearTimeout(autoTimer); autoTimer = setTimeout(() => { commitToday(false); }, 1200); }
+async function commitToday(withCloud) {
+  clearTimeout(autoTimer);
+  if (!vault) return false;
+  if (dirty) { upsertToday(); dirty = false; }
+  const ok = await persistQueued();
+  if (!vault) return ok;
+  const t = new Date(); const hhmm = `${pad2(t.getHours())}:${pad2(t.getMinutes())}`;
+  const st = $('#saveStatus');
+  if (st) st.textContent = ok ? `บันทึกในเครื่องแล้ว · ${hhmm}` : 'บันทึกไม่สำเร็จ (พื้นที่ browser เต็ม?)';
+  if (withCloud && !isDecoy && hasCloud()) { st.textContent = 'กำลัง sync...'; const s = await syncPush(); st.textContent = s ? `บันทึก + sync แล้ว · ${hhmm}` : `บันทึกในเครื่องแล้ว · sync ไม่สำเร็จ · ${hhmm}`; }
+  setSaveLabel(); renderTrend(); renderChain(); analyzeBanner(); checkStorm();
+  return ok;
+}
+function setSaveLabel() { const b = $('#saveBtn'); if (!b || !vault) return; const has = !!byDate()[stateDate]; b.textContent = dirty ? 'บันทึกวันนี้ •' : (has ? 'บันทึกแล้ว · sync อีกครั้ง' : 'บันทึกวันนี้'); }
+function hydrateToday() { stateDate = localDate(); const e = byDate()[stateDate]; state = e ? normState(clone(e)) : emptyState(); dirty = false; }
+
+// ---------- cloud (JSONBin)
+const JB = 'https://api.jsonbin.io/v3/b';
+async function jbCreate(key, payload) { const r = await fetch(JB, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Master-Key': key, 'X-Bin-Name': 'morning', 'X-Bin-Private': 'true' }, body: JSON.stringify(payload) }); if (!r.ok) throw new Error('create ' + r.status); return (await r.json()).metadata.id; }
+async function jbUpdate(key, bin, payload) { const r = await fetch(`${JB}/${bin}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': key }, body: JSON.stringify(payload) }); if (!r.ok) throw new Error('update ' + r.status); return true; }
+async function jbRead(key, bin) { const r = await fetch(`${JB}/${bin}/latest`, { headers: { 'X-Master-Key': key } }); if (!r.ok) throw new Error('read ' + r.status); return (await r.json()).record; }
+const hasCloud = () => !!(vault && vault.cloud && vault.cloud.key && vault.cloud.binId);
+function mergeVaults(local, remote) {
+  local = normalizeVault(local); remote = normalizeVault(remote);
+  const h = {}; [...remote.history, ...local.history].forEach(e => { const c = h[e.date]; if (!c || (e.savedAt || '') > (c.savedAt || '')) h[e.date] = e; });
+  const fl = {}; [...remote.financeLog, ...local.financeLog].forEach(f => { const c = fl[f.month]; if (!c || (f.savedAt || '') > (c.savedAt || '')) fl[f.month] = f; });
+  const cs = {}; [...remote.customStatements, ...local.customStatements].forEach(x => { cs[x.id] = x; });
+  const lp = local.pack, rp = remote.pack;
+  const pack = lp && rp ? ((lp.importedAt || '') >= (rp.importedAt || '') ? lp : rp) : (lp || rp);
+  return Object.assign({}, remote, local, {
+    history: Object.values(h).sort((a, b) => a.date.localeCompare(b.date)), financeLog: Object.values(fl), customStatements: Object.values(cs),
+    monthly: Object.assign({}, remote.monthly, local.monthly), missionStatus: Object.assign({}, remote.missionStatus, local.missionStatus),
+    missions: local.missions || remote.missions, pack, cloud: local.cloud || remote.cloud, version: 4
+  });
+}
+function setSyncDot(s) { const d = $('#syncDot'); if (d) d.className = 'sync-ind ' + s; }
+async function syncPush() {
+  if (!hasCloud() || isDecoy) return false; setSyncDot('busy');
+  try { await jbUpdate(vault.cloud.key, vault.cloud.binId, { cipher: await encryptObj(vault, PIN), updatedAt: new Date().toISOString() }); vault.cloud.lastSyncAt = new Date().toISOString(); await persistQueued(); setSyncDot('on'); return true; }
+  catch (e) { setSyncDot('err'); return false; }
+}
+async function syncPull() {
+  if (!hasCloud() || isDecoy) return false; setSyncDot('busy');
+  try { const rec = await jbRead(vault.cloud.key, vault.cloud.binId); if (rec && rec.cipher) { const remote = await decryptObj(rec.cipher, PIN); const cloud = vault.cloud; vault = mergeVaults(vault, remote); vault.cloud = cloud; vault.cloud.lastSyncAt = new Date().toISOString(); await persistQueued(); } setSyncDot('on'); return true; }
+  catch (e) { setSyncDot('err'); return false; }
+}
+
+// ---------- gate
+const screens = { welcome: $('#screenWelcome'), pin: $('#screenPin'), restore: $('#screenRestore') };
+function showScreen(n) { Object.values(screens).forEach(s => s.classList.remove('active')); screens[n].classList.add('active'); }
+let gateMode = 'boot', buffer = '', setupFirst = '', restoreCipher = null, restoreCloudCfg = null;
+const renderDots = () => $$('#lockDots .dot').forEach((d, i) => d.classList.toggle('filled', i < buffer.length));
+function shake(sel) { const el = $(sel); el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 400); }
+const resetBuf = () => { buffer = ''; renderDots(); };
+function pinStatus(m, c = '') { const el = $('#pinStatus'); el.className = 'gate-status ' + c; el.textContent = m; }
+function toPin(mode, prompt, hint, canBack) { gateMode = mode; $('#pinPrompt').textContent = prompt; $('#pinHint').textContent = hint || ''; pinStatus(''); resetBuf(); $('.np-btn[data-a="back"]').style.visibility = canBack ? '' : 'hidden'; showScreen('pin'); }
+
+async function handlePinDigit(d) {
+  if (buffer.length >= 4) return;
+  buffer += d; renderDots();
+  if (buffer.length < 4) return;
+  const code = buffer;
+  if (gateMode === 'setup1') { setupFirst = code; toPin('setup2', 'ยืนยันรหัสอีกครั้ง', 'ใส่ 4 หลักเดิม', true); return; }
+  if (gateMode === 'setup2') {
+    if (code !== setupFirst) { shake('#lockDots'); pinStatus('ไม่ตรงกัน · เริ่มใหม่', 'err'); setupFirst = ''; setTimeout(() => toPin('setup1', 'ตั้งรหัส 4 หลัก', 'จดไว้ที่ปลอดภัย ลืม = กู้ไม่ได้', true), 500); return; }
+    pinStatus('กำลังเข้ารหัส...');
+    PIN = code; isDecoy = false; vault = normalizeVault({ createdAt: new Date().toISOString() }); vault.missions = [];
+    await persistVault(); return unlockApp();
+  }
+  if (gateMode === 'verify') {
+    pinStatus('กำลังตรวจ...');
+    let v = await loadBundle(LS.data, code);
+    if (v) { PIN = code; vault = v; isDecoy = false; return unlockApp(); }
+    v = await loadBundle(LS.decoy, code);
+    if (v) { PIN = code; vault = v; isDecoy = true; return unlockApp(); }
+    shake('#lockDots'); pinStatus('รหัสไม่ถูกต้อง', 'err'); setTimeout(resetBuf, 400); return;
+  }
+  if (gateMode === 'restorePin') {
+    pinStatus('กำลังถอดรหัส...');
+    try {
+      const v = normalizeVault(await decryptObj(restoreCipher, code));
+      PIN = code; vault = v; isDecoy = false;
+      if (restoreCloudCfg) vault.cloud = Object.assign({}, restoreCloudCfg, { lastSyncAt: new Date().toISOString() });
+      restoreCipher = null; restoreCloudCfg = null;
+      await persistVault(); return unlockApp();
+    } catch (e) { shake('#lockDots'); pinStatus('PIN ไม่ตรงกับข้อมูลชุดนี้', 'err'); setTimeout(resetBuf, 400); }
+  }
+}
+$('#numpad').addEventListener('click', e => {
+  const b = e.target.closest('.np-btn'); if (!b) return;
+  if (b.dataset.n !== undefined) handlePinDigit(b.dataset.n);
+  else if (b.dataset.a === 'clear') { resetBuf(); pinStatus(''); }
+  else if (b.dataset.a === 'back' && gateMode !== 'verify') { setupFirst = ''; restoreCipher = null; restoreCloudCfg = null; gateMode = 'pick'; showScreen('welcome'); }
+});
+document.addEventListener('keydown', e => { if (unlocked() || !screens.pin.classList.contains('active')) return; if (e.key >= '0' && e.key <= '9') handlePinDigit(e.key); else if (e.key === 'Backspace') { resetBuf(); pinStatus(''); } });
+$('#gateForgot').addEventListener('click', () => { if (confirm('ลบข้อมูลบนเครื่องนี้แล้วเริ่มใหม่?\n(ถ้ามี cloud หรือไฟล์สำรอง ดึงกลับได้ภายหลัง)')) { lsDel(LS.data); lsDel(LS.bioCred); lsDel(LS.bioSalt); lsDel(LS.bioPin); location.reload(); } });
+$('#btnNew').addEventListener('click', () => toPin('setup1', 'ตั้งรหัส 4 หลัก', 'จดไว้ที่ปลอดภัย ลืม = กู้ไม่ได้', true));
+$('#btnRestore').addEventListener('click', () => { $('#restoreKey').value = ''; $('#restoreBin').value = ''; $('#restoreStatus').textContent = ''; showScreen('restore'); });
+$('#btnRestoreBack').addEventListener('click', () => showScreen('welcome'));
+$('#btnRestoreFetch').addEventListener('click', async () => {
+  const key = $('#restoreKey').value.trim(), bin = $('#restoreBin').value.trim(), st = $('#restoreStatus');
+  if (!key || !bin) { st.className = 'gate-status err'; st.textContent = 'กรอกทั้ง 2 ช่อง'; return; }
+  st.className = 'gate-status'; st.innerHTML = '<span class="spin"></span>กำลังดึง...'; $('#btnRestoreFetch').disabled = true;
+  try { const rec = await jbRead(key, bin); if (!rec || !rec.cipher) throw new Error('empty'); restoreCipher = rec.cipher; restoreCloudCfg = { key, binId: bin }; toPin('restorePin', 'ใส่ PIN เดิม 4 หลัก', 'PIN เดียวกับเครื่องเดิม', true); }
+  catch (e) { st.className = 'gate-status err'; st.textContent = 'ดึงไม่สำเร็จ · เช็ค Master Key / Bin ID / อินเทอร์เน็ต'; }
+  $('#btnRestoreFetch').disabled = false;
+});
+$('#btnRestoreFile').addEventListener('click', () => $('#fileBackupGate').click());
+$('#fileBackupGate').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (j.kind !== 'morning-backup' || !j.bundle) throw new Error(); restoreCipher = j.bundle; restoreCloudCfg = null; toPin('restorePin', 'ใส่ PIN ของไฟล์สำรอง', thShort(localDate(new Date(j.exportedAt || Date.now()))), true); }
+  catch (err) { $('#welcomeStatus').className = 'gate-status err'; $('#welcomeStatus').textContent = 'ไฟล์นี้ไม่ใช่ไฟล์สำรองของ Morning'; }
+});
+function bootGate() {
+  if (lsGet(LS.data) || lsGet(LS.decoy)) {
+    toPin('verify', 'ใส่รหัส 4 หลัก', 'เพื่อเปิดกระจก', false);
+    $('#gateForgot').hidden = !lsGet(LS.data);
+    const bio = hasBio() && bioSupported(); $('#bioUnlockArea').hidden = !bio;
+    if (bio) setTimeout(() => biometricUnlock(true), 350);
+  } else { gateMode = 'pick'; showScreen('welcome'); }
+}
+
+// ---------- lock / unlock
+async function unlockApp() {
+  vault = normalizeVault(vault);
+  if (!isDecoy && !vault.missions && vault.pack) vault.missions = clone(vault.pack.missions || []);
+  C = buildContent(isDecoy ? null : vault.pack);
+  document.body.classList.remove('locked'); document.body.classList.add('unlocked'); document.body.classList.toggle('decoy', isDecoy);
+  resetBuf(); pinStatus(''); bump();
+  hydrateToday(); renderAll(); showTab('mirror');
+  setSyncDot(hasCloud() ? 'on' : 'off');
+  if (!isDecoy && hasCloud()) { const ok = await syncPull(); if (ok && vault && !dirty) { C = buildContent(vault.pack); hydrateToday(); renderAll(); } }
+}
+async function lockApp() {
+  if (vault && dirty) { try { await commitToday(false); } catch (e) {} }
+  PIN = null; vault = null; isDecoy = false; state = emptyState(); C = buildContent(null); LBLX = {};
+  $$('[data-dyn]').forEach(el => { el.innerHTML = ''; });
+  $$('.overlay').forEach(o => o.classList.remove('show'));
+  $('#wrapDark').hidden = true; $('#tabs').hidden = true; $('#digest').classList.remove('show');
+  document.body.classList.remove('unlocked', 'decoy', 'storm'); document.body.classList.add('locked');
+  setupFirst = ''; bootGate();
+}
+
+// ---------- rendering
+function tileHTML(key, [v, emoji, label]) { return `<button type="button" class="tile" data-v="${esc(v)}"><span class="emoji">${emoji}</span>${esc(optLabel(key, v, label))}</button>`; }
+function bigTileHTML(key, [v, emoji, label]) { return `<button type="button" class="big-tile" data-v="${esc(v)}"><span class="emoji">${emoji}</span>${esc(optLabel(key, v, label))}</button>`; }
+function rowHTML(r) {
+  if (r.t === 'toggle') return `<div class="check-row"><label>${esc(rowLabel(r.key, r.label))}</label><div class="toggle-group" data-key="${r.key}">${r.opts.map(([v, l]) => `<button type="button" class="toggle-btn" data-val="${v}">${esc(optLabel(r.key, v, l))}</button>`).join('')}</div></div>`;
+  return `<div class="check-row"><label>${esc(rowLabel(r.path, r.label))}</label><div class="slider-wrap"><input type="range" min="${r.min}" max="${r.max}" value="${Math.round((r.min + r.max) / 2)}" data-path="${r.path}" aria-label="${esc(r.label)}"><span class="slider-value" data-val-for="${r.path}">–</span></div></div>`;
+}
+function cardHTML(c) {
+  const head = `<div class="mirror-title">${esc(c.title)}</div>${c.sub ? `<div class="mirror-sub">${esc(c.sub)}</div>` : ''}`;
+  if (c.t === 'mirror') return `<div class="mirror">${head}${c.rows.map(rowHTML).join('')}</div>`;
+  if (c.t === 'slider') return `<div class="mirror">${head}${rowHTML({ t: 'slider', path: c.path, label: c.label || c.title, min: c.min, max: c.max })}</div>`;
+  if (c.t === 'single') return `<div class="mirror">${head}<div class="big-grid" data-single="${c.key}">${c.opts.map(o => bigTileHTML(c.key, o)).join('')}</div></div>`;
+  const groups = c.groups || [{ opts: c.opts }];
+  let html = groups.map(g => `${g.label ? `<div class="sub-group-label">${esc(g.label)}</div>` : ''}<div class="tile-grid" data-multi="${c.key}">${g.opts.map(o => tileHTML(c.key, o)).join('')}</div>`).join('');
+  if (c.custom) {
+    const cs = (vault && vault.customStatements) || [];
+    if (cs.length) html += `<div class="tile-grid" data-multi="${c.key}">${cs.map(x => `<span class="custom-tile-wrap"><button type="button" class="tile" data-v="${esc(x.id)}"><span class="emoji">·</span>${esc(x.text)}</button><button type="button" class="custom-tile-x" data-cx="${esc(x.id)}" aria-label="ลบ">×</button></span>`).join('')}</div>`;
+    html += `<div class="add-row"><input type="text" class="gate-input" id="newStatement" placeholder="เขียนประโยคของคุณเอง" maxlength="80"><button type="button" class="set-btn primary" id="btnAddStatement">+ เพิ่ม</button></div>`;
+  }
+  return `<div class="mirror">${head}${html}</div>`;
+}
+function allCards() { return [...MIRRORS.map(m => Object.assign({ t: 'mirror' }, m)), ...DEEP, ...(C.dark || []), ...BRIGHT, ...SILENT]; }
+function buildLabelIndex() {
+  const L = { _t: {}, commits: {} }; const add = (k, v, l) => { (L[k] = L[k] || {})[v] = l; };
+  allCards().forEach(c => {
+    if (c.t === 'mirror') c.rows.forEach(r => { if (r.t === 'toggle') { L._t[r.key] = rowLabel(r.key, r.label); r.opts.forEach(([v, l]) => add(r.key, v, optLabel(r.key, v, l))); } else L._t[r.path] = rowLabel(r.path, r.label); });
+    else if (c.t === 'slider') L._t[c.path] = c.title;
+    else { L._t[c.key] = c.title; (c.groups ? c.groups.flatMap(g => g.opts) : c.opts).forEach(([v, , l]) => add(c.key, v, optLabel(c.key, v, l))); }
+  });
+  ((vault && vault.customStatements) || []).forEach(x => add('statements', x.id, x.text));
+  COMMITS.forEach(([v, , l]) => add('commits', v, optLabel('commits', v, l)));
+  return L;
+}
+function renderAll() {
+  if (!vault) return;
+  LBLX = buildLabelIndex();
+  renderHeader(); renderNorth(); renderQuotes();
+  $('#commitsGrid').innerHTML = COMMITS.map(([v, e, l]) => `<button type="button" class="commit-tile" data-v="${v}"><span class="emoji">${e}</span>${esc(optLabel('commits', v, l))}</button>`).join('');
+  $('#secMirrors').innerHTML = MIRRORS.map(m => cardHTML(Object.assign({ t: 'mirror' }, m))).join('');
+  $('#secDeep').innerHTML = DEEP.map(cardHTML).join('');
+  const dark = !!(C.dark && C.dark.length) && !isDecoy;
+  $('#wrapDark').hidden = !dark; $('#darkTitle').textContent = C.darkTitle || 'มุมมืด';
+  $('#secDark').innerHTML = dark ? C.dark.map(cardHTML).join('') : '';
+  $('#secBright').innerHTML = BRIGHT.map(cardHTML).join('');
+  $('#secSilent').innerHTML = SILENT.map(cardHTML).join('');
+  renderMissions(); renderTrend(); renderChain(); analyzeBanner(); checkStorm(); renderDigestToggle(); renderFree(); renderTabs();
+  syncUI(); setSaveLabel();
+}
+function renderHeader() { const n = new Date(); $('#date').textContent = `วัน${TH_D[n.getDay()]}ที่ ${n.getDate()} ${TH_M[n.getMonth()]} ${n.getFullYear() + 543}`; }
+function renderNorth() {
+  $('#northLines').innerHTML = (C.northStar || []).map(([k, v]) => `<p class="line"><strong>${esc(k)}</strong> · ${esc(v)}</p>`).join('');
+  const today = localDate(); let blocks;
+  const p = C.profile;
+  if (p && p.birth) {
+    const birth = parseYMD(p.birth), life = p.lifespanYears || 90;
+    const age = ((parseYMD(today) - birth) / (365.2425 * 864e5)).toFixed(2);
+    const end = `${birth.getFullYear() + life}-${pad2(birth.getMonth() + 1)}-${pad2(birth.getDate())}`;
+    blocks = [];
+    if (p.milestone) { const d = dayDiff(today, p.milestone.date); blocks.push([d >= 0 ? d.toLocaleString('en-US') : 'ถึงแล้ว', p.milestone.label]); }
+    blocks.push([age, 'อายุวันนี้'], [Math.max(0, dayDiff(today, end)).toLocaleString('en-US'), `วันที่เหลือถึง ${life}`]);
+  } else {
+    const n = new Date(), doy = dayOfYear(n);
+    blocks = [[dayDiff(today, `${n.getFullYear()}-12-31`), 'วันที่เหลือปีนี้'], [Math.ceil(doy / 7), 'สัปดาห์ที่'], [doy, 'วันที่ของปี']];
+  }
+  $('#countdown').innerHTML = blocks.map(([v, l]) => `<div class="count-block"><span class="count-number">${esc(v)}</span><span class="count-label">${esc(l)}</span></div>`).join('');
+  const pulse = $('#pulse'), f = finNow();
+  if (!f || isDecoy) { pulse.hidden = true; pulse.innerHTML = ''; }
+  else {
+    const lad = C.finance.ladder || [], top = lad[lad.length - 1];
+    pulse.hidden = false;
+    pulse.innerHTML = `อิสรภาพ · ค่าเช่าสุทธิครอบรายจ่าย <b>${(f.rentNet / f.spending).toFixed(1)}×</b>${top ? ` · ขั้นสุดท้าย <b>${ladderPct(top, f)}%</b>` : ''}<span class="pulse-go">ดู →</span>`;
+  }
+}
+function renderQuotes() {
+  const d = dayOfYear(); const pickQ = arr => arr && arr.length ? arr[d % arr.length] : '';
+  $('#friendLabel').textContent = C.friendLabel; $('#friendAttr').textContent = C.friendAttr; $('#quoteFriend').textContent = pickQ(C.friendQuotes);
+  $('#monkLabel').textContent = C.monkLabel; $('#monkAttr').textContent = C.monkAttr; $('#quoteMonk').textContent = pickQ(C.monkQuotes);
+  $('#closingQuote').textContent = pickQ(C.closingQuotes);
+}
+function syncUI() {
+  $$('.toggle-group[data-key]').forEach(g => { const v = state.mirrors[g.dataset.key]; $$('.toggle-btn', g).forEach(b => b.classList.toggle('active', b.dataset.val === v)); });
+  $$('[data-multi]').forEach(g => { const arr = state.multi[g.dataset.multi] || []; $$('.tile', g).forEach(t => t.classList.toggle('on', arr.includes(t.dataset.v))); });
+  $$('[data-single]').forEach(g => { const v = state.single[g.dataset.single]; $$('.big-tile', g).forEach(t => t.classList.toggle('on', t.dataset.v === v)); });
+  $$('.commit-tile').forEach(t => t.classList.toggle('on', state.commits.includes(t.dataset.v)));
+  $$('input[type=range][data-path]').forEach(r => {
+    const v = getPath(state, r.dataset.path), lab = $(`[data-val-for="${r.dataset.path}"]`);
+    if (v == null) { r.classList.add('untouched'); r.value = Math.round((+r.min + +r.max) / 2); if (lab) lab.textContent = '–'; }
+    else { r.classList.remove('untouched'); r.value = v; if (lab) lab.textContent = v; }
+  });
+  updTension();
+}
+function updTension() {
+  const v = state.tension, el = $('#tensionResponse'); if (!el) return;
+  el.textContent = v == null ? 'ลากเพื่อให้คะแนน — ยังไม่นับจนกว่าคุณจะแตะ'
+    : v <= 3 ? 'สงบดี — วันที่ใจไม่พายุ คือวันที่ควรลงลึกขึ้นอีกขั้น ลองนั่ง 20 นาที'
+    : v <= 7 ? 'มีเสียงในใจหลายฝั่ง — ลองฟังเงียบๆ 5 นาทีโดยไม่ตัดสิน'
+    : 'พายุแรง — อย่าเพิ่งตัดสินใจเรื่องใหญ่วันนี้ ออกไปเดิน 1 ชั่วโมง';
+}
+
+// ---------- missions
+function missionBadge(m) {
+  if (vault.missionStatus[m.id] === 'done' || !m.due) return '';
+  const d = dayDiff(localDate(), m.due);
+  if (d < 0) return `<span class="badge red">เลยกำหนด ${-d} วัน</span>`;
+  if (d <= 30) return `<span class="badge amber">เหลือ ${d} วัน</span>`;
+  return '';
+}
+function renderMissions() {
+  const ml = $('#missionList'), ms = getMissions();
+  if (!ms.length) { ml.innerHTML = '<div class="empty">ยังไม่มีภารกิจ · กด "+ แก้ไข" เพื่อเพิ่ม</div>'; return; }
+  const today = localDate();
+  const rank = m => vault.missionStatus[m.id] === 'done' ? 3 : m.due ? (dayDiff(today, m.due) < 0 ? 0 : 1) : 2;
+  ml.innerHTML = ms.slice().sort((a, b) => rank(a) - rank(b) || (a.due || '9999').localeCompare(b.due || '9999')).map(m => {
+    const done = vault.missionStatus[m.id] === 'done', st = !!state.missionSteps[m.id];
+    const tgt = m.target || (m.due ? 'ภายใน ' + thShort(m.due) : '');
+    return `<div class="mission${done ? ' done' : ''}"><button type="button" class="mission-check${done ? ' done' : ''}" data-m="${esc(m.id)}" aria-label="ทำเสร็จแล้ว"></button><div class="mission-body"><div class="mission-title">${esc(m.title)} ${missionBadge(m)}</div>${m.desc ? `<div class="mission-desc">${esc(m.desc)}</div>` : ''}${tgt ? `<span class="mission-target">${esc(tgt)}</span>` : ''}${done ? '' : `<button type="button" class="mission-step-btn${st ? ' stepped' : ''}" data-step="${esc(m.id)}">${st ? '✓ ขยับวันนี้' : 'ขยับ 1 ก้าววันนี้'}</button>`}</div></div>`;
+  }).join('');
+}
+function renderMissionEditList() {
+  $('#missionEditList').innerHTML = getMissions().map(m => `<div class="mission-edit-item" data-mid="${esc(m.id)}">
+    <input type="text" class="gate-input" data-f="title" value="${esc(m.title)}" placeholder="ชื่อภารกิจ">
+    <input type="text" class="gate-input" data-f="desc" value="${esc(m.desc || '')}" placeholder="คำอธิบาย">
+    <input type="date" class="gate-input" data-f="due" value="${esc(m.due || '')}" aria-label="วันกำหนด">
+    <button type="button" class="set-btn primary" data-save="1">บันทึก</button><button type="button" class="set-btn danger" data-del="1">ลบ</button></div>`).join('') || '<div class="empty">ยังไม่มีภารกิจ</div>';
+}
+
+// ---------- trend / chain / banners / storm
+function renderTrend() {
+  if (!vault) return;
+  const t = C.trend || GENERIC.trend; $('#trendLabel').textContent = `14 วันที่ผ่านมา · ${t.label}`;
+  const bd = byDate();
+  $('#shadowTrend').innerHTML = recentDays(14).map(d => { const e = bd[d], v = e ? getPath(e, t.path) : null;
+    if (v == null) return `<div class="trend-bar empty" style="height:3px" title="${d}"></div>`;
+    return `<div class="trend-bar ${v >= 7 ? 'high' : v >= 4 ? 'medium' : 'low'}" style="height:${Math.max(6, v * 10)}%" title="${d}: ${v}"></div>`; }).join('');
+}
+function renderChain() {
+  if (!vault) return;
+  const bd = byDate(), days = recentDays(90), today = localDate();
+  const row = (gid, sid, pred) => {
+    $('#' + gid).innerHTML = days.map(d => { const e = bd[d], s = e ? pred(e) : null; return `<div class="chain-cell ${s || ''}${d === today ? ' today' : ''}" title="${d}"></div>`; }).join('');
+    let n = 0; for (let i = days.length - 1; i >= 0; i--) { const e = bd[days[i]]; if (e && pred(e) === 'done') n++; else if (days[i] === today) continue; else break; }
+    $('#' + sid).textContent = n + ' วันต่อเนื่อง';
+  };
+  row('chainCheckin', 'streakCheckin', () => 'done');
+  row('chainSila', 'streakSila', e => e.mirrors && e.mirrors.sila === 'yes' ? 'done' : e.mirrors && e.mirrors.sila === 'almost' ? 'partial' : null);
+  row('chainMed', 'streakMed', e => e.mirrors && (e.mirrors.med === 'long' || e.mirrors.med === 'short') ? 'done' : null);
+  row('chainEx', 'streakEx', e => e.mirrors && e.mirrors.move === 'good' ? 'done' : e.mirrors && e.mirrors.move === 'little' ? 'partial' : null);
+}
+function stormActive() { const t = recentEntries(7).slice(0, 3).map(h => h.tension).filter(v => typeof v === 'number'); return t.length >= 3 && t.every(v => v >= 7); }
+function preStormSignals(recent) {
+  const sig = [], ser = p => recent.slice(0, 5).map(h => getPath(h, p)).filter(v => typeof v === 'number');
+  const rising = (v, at) => v.length >= 3 && v[0] >= at && v[0] > v[2] && v[0] >= v[1] && v[1] >= v[2];
+  if (rising(ser('tension'), 6)) sig.push('ความย้อนแย้งไต่ขึ้น 3 บันทึกติด');
+  const sl = ser('mirrors.sleep'); if (sl.length >= 3 && sl[0] < 6 && sl[0] < sl[2]) sig.push('นอนน้อยลง');
+  (C.alerts.preStorm || []).forEach(r => {
+    if (r.type === 'sliderRising' && rising(ser(r.path), r.atLeast)) sig.push(r.label);
+    if (r.type === 'singleAtLeast') { const v = recent[0] && recent[0].single && recent[0].single[r.key]; if (v && r.order.indexOf(v) >= r.order.indexOf(r.atLeast)) sig.push(r.label); }
+  });
+  return sig.length >= 2 ? sig : null;
+}
+function analyzeBanner() {
+  if (!vault) return;
+  const b = $('#banner'), lv = $('#lastVisit'), today = localDate(); b.className = 'banner'; b.innerHTML = '';
+  const todayE = byDate()[today], prev = vault.history.filter(h => h.date < today).slice(-1)[0];
+  lv.textContent = todayE ? 'บันทึกวันนี้แล้ว · แก้ได้ทั้งวัน' : prev ? (dayDiff(prev.date, today) === 1 ? 'บันทึกล่าสุด: เมื่อวาน' : `บันทึกล่าสุด: ${dayDiff(prev.date, today)} วันก่อน`) : 'เริ่มต้นครั้งแรก';
+  const show = (cls, title, text) => { b.className = 'banner ' + cls; b.innerHTML = `<strong>${esc(title)}</strong>${esc(text)}`; };
+  if (stormActive()) return show('storm', 'โหมดพายุ', 'ความย้อนแย้งสูงต่อเนื่อง 3 วัน — วันนี้หน้าสงบลง คำถามเบาลง');
+  const recent = recentEntries(7);
+  for (const r of (C.alerts.sliderHigh || [])) {
+    const v = recent.slice(0, r.window).map(h => getPath(h, r.path)).filter(x => typeof x === 'number');
+    if (v.length >= r.minDays) { const avg = v.reduce((a, c) => a + c, 0) / v.length; if (avg >= r.avgAtLeast || v.filter(x => x >= r.highAt).length >= r.highCount) return show('amber', 'สังเกต', fill(r.text, { avg: avg.toFixed(1), n: v.length })); }
+  }
+  for (const r of (C.alerts.singleRepeat || [])) { if (recent.slice(0, r.window).filter(h => h.single && h.single[r.key] === r.value).length >= r.countAtLeast) return show('amber', 'สังเกต', r.text); }
+  const pre = preStormSignals(recent);
+  if (pre) return show('prestorm', 'สัญญาณก่อนพายุ', pre.join(' · ') + ' — อีก 1–2 วันอาจเข้าโหมดพายุ: นอนเพิ่ม · ห่างคนเครียด · นั่งสมาธินานขึ้น · เลื่อนการตัดสินใจใหญ่');
+  if (prev && !todayE && dayDiff(prev.date, today) >= 4) return show('dim', `หายไป ${dayDiff(prev.date, today)} วัน`, 'ไม่ต้องรู้สึกผิด — กลับมามองกระจกเงียบๆ วันนี้พอ');
+  if (C.finance && !isDecoy && new Date().getDate() <= 3) return show('dim', 'ต้นเดือน', 'ส่ง "เช็ค" + screenshot พอร์ตให้ Claude · และอัปเดตตัวเลขเดือนในแท็บอิสรภาพ');
+}
+function checkStorm() {
+  if (!vault) return;
+  const on = stormActive(), d = dayOfYear(); document.body.classList.toggle('storm', on);
+  $('#questionHeader').textContent = on ? 'คำถามวันพายุ' : 'คำถามเช้านี้';
+  const arr = on ? (C.stormQuestions || GENERIC.stormQuestions) : C.questions;
+  $('#dailyQuestion').textContent = arr[d % arr.length];
+}
+let breathStarted = false;
+function breathCycle() { if (breathStarted) return; breathStarted = true; const L = [['หายใจเข้า', 4000], ['หยุด', 7000], ['หายใจออก', 8000]]; let i = 0; (function n() { $('#breathStage').textContent = L[i][0]; setTimeout(() => { i = (i + 1) % 3; n(); }, L[i][1]); })(); }
+
+// ---------- weekly digest
+const weekEntries = () => { const s = new Set(recentDays(7)); return vault.history.filter(h => s.has(h.date)); };
+function countArr(entries, get) { const m = {}; entries.forEach(e => (get(e) || []).forEach(v => { m[v] = (m[v] || 0) + 1; })); return m; }
+function countOne(entries, get) { const m = {}; entries.forEach(e => { const v = get(e); if (v) m[v] = (m[v] || 0) + 1; }); return m; }
+const topOf = (m, n = 6) => Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n);
+function avgOf(entries, path) { const v = entries.map(e => getPath(e, path)).filter(x => typeof x === 'number'); return v.length ? (v.reduce((a, c) => a + c, 0) / v.length).toFixed(1) : '–'; }
+function buildDigest() {
+  const wk = weekEntries(); if (!wk.length) return null;
+  const pills = (key, title) => { const t = topOf(countArr(wk, e => e.multi && e.multi[key])); return t.length ? `<div class="digest-section"><div class="digest-h">${esc(title)}</div>${t.map(([k, c]) => `<span class="pill">${esc((LBLX[key] || {})[k] || k)} · ${c}</span>`).join('')}</div>` : ''; };
+  const stats = [[`${wk.length}/7`, 'วันบันทึก'], [avgOf(wk, 'tension'), 'ย้อนแย้งเฉลี่ย'], [avgOf(wk, 'mirrors.sleep'), 'นอนเฉลี่ย']];
+  const tp = (C.trend || {}).path; if (tp && tp !== 'tension' && !isDecoy) stats.push([avgOf(wk, tp), (C.trend.label || '') + 'เฉลี่ย']);
+  const sila = wk.filter(e => e.mirrors && e.mirrors.sila === 'yes').length, deleg = wk.filter(e => e.mirrors && e.mirrors.delegate === 'yes').length;
+  const t = parseFloat(avgOf(wk, 'tension'));
+  const refl = !isNaN(t) && t >= 7 ? 'สัปดาห์ที่ใจหนัก — ฟังให้ครบก่อนตอบ อย่าเพิ่งตัดสินใจเรื่องที่ย้อนกลับไม่ได้'
+    : sila >= 5 ? 'ศีลครบเกือบทั้งสัปดาห์ — ใช้ช่วงที่ใจนิ่งลงลึกในสมาธิ ไม่ใช่ปล่อยผ่าน'
+    : deleg === 0 && !isDecoy ? 'ทั้งสัปดาห์ยังไม่ได้ปล่อยให้ทีมตัดสินใจแทนเลย — อิสรภาพขั้นต่อไปติดอยู่ตรงนี้'
+    : 'คำถามสัปดาห์นี้: อะไรที่คุณบอกตัวเองซ้ำๆ แล้วยังไม่ทำ?';
+  return `<div class="digest-title">สรุปสัปดาห์ที่ผ่านมา</div><div class="digest-sub">7 วันล่าสุด · ${wk.length} วันที่บันทึก</div>
+    <div class="stat-grid">${stats.map(([v, l]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div>
+    ${pills('shadow', 'เงาที่ขึ้นบ่อย')}${isDecoy ? '' : (C.dark || []).filter(c => c.t === 'multi').map(c => pills(c.key, c.title)).join('')}${pills('mood', 'อารมณ์')}${pills('merits', 'บุญเล็กๆ')}${pills('gratitude', 'ขอบคุณ')}
+    <div class="digest-reflect">${esc(refl)}</div>`;
+}
+function renderDigestToggle() {
+  const dg = $('#digest'), tg = $('#digestToggle'), html = buildDigest();
+  if (!html) { dg.classList.remove('show'); tg.hidden = true; return; }
+  if (new Date().getDay() === 0) { dg.innerHTML = html; dg.classList.add('show'); tg.hidden = true; }
+  else { tg.hidden = false; tg.textContent = dg.classList.contains('show') ? 'ซ่อนสรุป' : 'ดูสรุปสัปดาห์'; if (dg.classList.contains('show')) dg.innerHTML = html; }
+}
+
+// ---------- freedom tab
+function finNow() {
+  const F = C.finance; if (!F || !vault) return null;
+  const log = vault.financeLog.slice().sort((a, b) => a.month.localeCompare(b.month)), last = log[log.length - 1], snap = F.asOf.slice(0, 7);
+  const use = last && last.month > snap, pick = (k, base) => (use && last[k] != null ? last[k] : base);
+  const debt = pick('debt', F.totals.debt), equity = pick('equity', F.totals.equity);
+  return { rentNet: pick('rentNet', F.rent.net), debt, equity, asset: use && last.debt != null && last.equity != null ? debt + equity : F.totals.asset, spending: F.spending, label: use ? `อัปเดตเอง ${thMonth(last.month)}` : F.asOfLabel, ym: use ? last.month : snap, fromLog: !!use };
+}
+function ladderPct(l, f) { const v = l.metric === 'coverage' ? (f.rentNet / f.spending) / (l.target || 1) : f.rentNet / l.target; return Math.min(100, Math.round(v * 100)); }
+function finSeries() {
+  const F = C.finance, pts = (F.series || []).map(([m, a, d, e]) => ({ m, a, d, e }));
+  pts.push({ m: F.asOf.slice(0, 7), a: F.totals.asset, d: F.totals.debt, e: F.totals.equity, snap: true });
+  vault.financeLog.forEach(l => { if (l.debt != null && l.equity != null) { const i = pts.findIndex(p => p.m === l.month); const p = { m: l.month, a: l.debt + l.equity, d: l.debt, e: l.equity }; if (i >= 0) pts[i] = p; else pts.push(p); } });
+  return pts.sort((x, y) => x.m.localeCompare(y.m));
+}
+function debtFreeText(f) {
+  const F = C.finance, df = F.debtFree, pts = finSeries(), first = pts[0], last = pts[pts.length - 1];
+  const span = first && last ? monthDiff(first.m, last.m) : 0, rate = span ? (last.d - first.d) / span : null;
+  const out = { trend: rate == null ? '' : `${span} เดือนที่ผ่านมา (${thMonth(first.m)}→${thMonth(last.m)}) หนี้${rate > 0 ? 'เพิ่ม' : 'ลด'}เฉลี่ย ${fmtM(Math.abs(rate))}/เดือน · รวม ${rate > 0 ? '+' : '−'}${fmtM(Math.abs(last.d - first.d))}`, up: rate > 0, need: '' };
+  if (df) { const left = Math.max(1, monthDiff(f.ym, df.date.slice(0, 7))); out.need = `ปลอดหนี้ภายใน ${thShort(df.date)} (${df.label}) ต้องลดเฉลี่ย ~${fmtM(f.debt / left)}/เดือน`; }
+  out.eq = first && last ? `${last.e - first.e >= 0 ? '+' : '−'}${fmtM(Math.abs(last.e - first.e))} ใน ${span} เดือน` : '';
+  return out;
+}
+function rankBars(rows, fmt = fmtM) {
+  const max = Math.max(1, ...rows.map(r => Math.abs(r[1])));
+  return rows.map(([l, v, s]) => `<div class="rk"><div class="rk-top"><span>${esc(l)}</span><b>${fmt(v)}</b></div><div class="bar"><i style="width:${Math.max(2, Math.abs(v) / max * 100)}%"></i></div>${s ? `<div class="rk-sub">${esc(s)}</div>` : ''}</div>`).join('');
+}
+function renderFree() {
+  const root = $('#freeRoot'), F = C.finance;
+  if (!F || isDecoy || !vault) { root.innerHTML = ''; return; }
+  const f = finNow(), cov = f.rentNet / f.spending, dt = debtFreeText(f), R = F.rent;
+  const nowYM = localDate().slice(0, 7), lastLog = vault.financeLog.slice().sort((a, b) => a.month.localeCompare(b.month)).slice(-1)[0];
+  const port = F.portfolio || {}, ptotal = (port.items || []).reduce((a, [, v]) => a + v, 0);
+  root.innerHTML = `
+  <div class="fin-head"><h1>อิสรภาพ</h1><div class="fin-src">ที่มา: ${esc(f.fromLog ? f.label + ' (ตัวเลขที่คุณกรอก)' : F.source)}</div></div>
+  <section><div class="kpi-grid">
+    <div class="kpi"><div class="k">ค่าเช่าสุทธิ / เดือน</div><div class="v">${fmtM(f.rentNet)}</div><div class="s">${R.units} ยูนิต · ว่าง ${R.vacant} (${pct(R.vacant, R.units)}%)</div></div>
+    <div class="kpi"><div class="k">ครอบรายจ่ายส่วนตัว</div><div class="v">${cov.toFixed(1)}×</div><div class="s">รายจ่าย ${fmtB(f.spending)}/เดือน · ยังไม่หักผ่อนหนี้</div></div>
+    <div class="kpi"><div class="k">หนี้รวม</div><div class="v">${fmtM(f.debt)}</div><div class="s${dt.up ? ' warn' : ''}">${pct(f.debt, f.asset)}% ของสินทรัพย์${dt.up ? ' · กำลังเพิ่ม' : ''}</div></div>
+    <div class="kpi"><div class="k">ส่วนของเจ้าของ</div><div class="v">${fmtM(f.equity)}</div><div class="s">${esc(dt.eq)}</div></div>
+  </div><div class="note-line">${esc(F.rentNote || '')}</div></section>
+
+  <section><h2>บันไดอิสรภาพ</h2><div class="mirror">${(F.ladder || []).map(l => { const p = ladderPct(l, f); return `<div class="lad"><div class="lad-top"><span>${esc(l.label)}</span><b>${p}%</b></div><div class="bar${p >= 100 ? ' done' : ''}"><i style="width:${Math.max(2, p)}%"></i></div><div class="lad-w">${esc([l.when, l.metric === 'rentNet' ? `ตอนนี้ ${fmtM(f.rentNet)} จาก ${fmtM(l.target)}` : `ตอนนี้ ${cov.toFixed(1)} เท่า`, l.note].filter(Boolean).join(' · '))}${l.date ? ` · อีก ${Math.max(0, dayDiff(localDate(), l.date)).toLocaleString('en-US')} วัน` : ''}</div></div>`; }).join('')}</div></section>
+
+  <section><h2>หนี้</h2><div class="mirror">${rankBars(F.debtSplit || [])}
+    ${dt.trend ? `<div class="note-line${dt.up ? ' warn' : ''}">${esc(dt.trend)}</div>` : ''}${dt.need ? `<div class="note-line">${esc(dt.need)}</div>` : ''}
+    <div class="note-line">สัดส่วนหนี้ (ครอบครัว / สถาบัน) มาจากงบ ${esc(F.asOfLabel)}</div></div></section>
+
+  <section><h2>ค่าเช่าสุทธิรายทำเล</h2><div class="mirror">${rankBars((R.locations || []).filter(l => l[4] > 0).map(([c, n, u, v, net]) => [`${c} · ${n}`, net, v ? `ว่าง ${v}/${u}` : `เต็ม ${u} ยูนิต`]), fmtB)}
+    <div class="note-line">ทำเลที่ยังไม่มีรายได้จริงไม่แสดงในกราฟ (ดูในธงด้านล่าง) · งบ ${esc(F.asOfLabel)}</div></div></section>
+
+  <section><h2>สินทรัพย์ (งบ ${esc(F.asOfLabel)})</h2><div class="mirror">${rankBars(F.assetMix || [])}</div></section>
+
+  ${port.items ? `<section><h2>พอร์ต · ${esc(port.mission || '')}</h2><div class="mirror">${rankBars(port.items)}
+    <div class="note-line">รวม ${fmtM(ptotal)} = ${(ptotal / f.equity * 100).toFixed(1)}% ของส่วนของเจ้าของ · ถ้าธุรกิจหายทั้งหมด ถอน 4%/ปี ได้ ~${fmtB(ptotal * 0.04 / 12)}/เดือน (${pct(ptotal * 0.04 / 12, f.spending)}% ของรายจ่าย)</div>
+    ${port.target ? `<div class="note-line">${esc(port.target)}</div>` : ''}${port.caveat ? `<div class="note-line">${esc(port.caveat)}</div>` : ''}${port.dca ? `<div class="note-line">${esc(port.dca)}</div>` : ''}</div></section>` : ''}
+
+  <section><h2>ธงที่ยังเปิดอยู่</h2><ul class="flags">${(F.flags || []).map(x => `<li class="${esc(x.lv)}"><span>${x.lv === 'warn' ? 'ต้องจัดการ' : x.lv === 'confirm' ? 'รอยืนยัน' : 'ข้อสังเกต'}</span>${esc(x.t)}</li>`).join('')}</ul></section>
+
+  <section><h2>อัปเดตตัวเลขเดือน</h2><div class="mirror">
+    <div class="mirror-sub">ช่องเดียวต่อหัวข้อ · เว้นว่าง = ใช้ค่าล่าสุด · พิมพ์ "2.9ล้าน" ได้</div>
+    <label class="fin-in"><span>เดือน</span><input type="month" id="finMonth" value="${nowYM}"></label>
+    <label class="fin-in"><span>ค่าเช่าสุทธิรับจริง (บาท/เดือน)</span><input inputmode="decimal" id="finRent" placeholder="${fmtB(f.rentNet)}"></label>
+    <label class="fin-in"><span>หนี้รวม ณ สิ้นเดือน</span><input inputmode="decimal" id="finDebt" placeholder="${fmtB(f.debt)}"></label>
+    <label class="fin-in"><span>ส่วนของเจ้าของ (Equity)</span><input inputmode="decimal" id="finEquity" placeholder="${fmtB(f.equity)}"></label>
+    <button type="button" class="set-btn primary" id="btnFinSave">บันทึกตัวเลขเดือนนี้</button>
+    <div class="set-label" id="finStatus" style="margin-top:8px">${lastLog ? `ล่าสุด: ${thMonth(lastLog.month)} · ค่าเช่า ${fmtM(lastLog.rentNet)} · หนี้ ${fmtM(lastLog.debt)} · equity ${fmtM(lastLog.equity)}` : 'ยังไม่เคยกรอก — ตอนนี้ใช้ตัวเลขจากงบใน Personal Pack'}</div>
+  </div></section>`;
+}
+function parseMoney(s) { s = String(s || '').trim().replace(/[,\s฿]|บาท/g, ''); if (!s) return null; let mult = 1; if (/(ล้าน|m)$/i.test(s)) { mult = 1e6; s = s.replace(/(ล้าน|m)$/i, ''); } const n = Number(s); return isFinite(n) ? Math.round(n * mult) : NaN; }
+function renderTabs() { const show = !!C.finance && !isDecoy; $('#tabs').hidden = !show; if (!show) showTab('mirror'); }
+function showTab(t) { $('#viewMirror').hidden = t !== 'mirror'; $('#viewFree').hidden = t !== 'free'; $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); try { window.scrollTo(0, 0); } catch (e) {} }
+
+// ---------- interactions (event delegation)
+document.addEventListener('click', async e => {
+  if (!unlocked() || !vault) return;
+  const t = e.target;
+  const tab = t.closest('#tabs button'); if (tab) return showTab(tab.dataset.tab);
+  if (t.closest('#pulse')) return showTab('free');
+  const cx = t.closest('.custom-tile-x');
+  if (cx) { if (!confirm('ลบประโยคนี้?')) return; const id = cx.dataset.cx; vault.customStatements = vault.customStatements.filter(x => x.id !== id); state.multi.statements = (state.multi.statements || []).filter(v => v !== id); renderAll(); markDirty(); return; }
+  const tb = t.closest('.toggle-group[data-key] .toggle-btn');
+  if (tb) { const k = tb.parentElement.dataset.key, v = tb.dataset.val; if (state.mirrors[k] === v) delete state.mirrors[k]; else state.mirrors[k] = v; syncUI(); return markDirty(); }
+  const tile = t.closest('[data-multi] .tile');
+  if (tile) { const k = tile.closest('[data-multi]').dataset.multi, v = tile.dataset.v; let a = state.multi[k] || [];
+    if (v === 'none') a = a.includes('none') ? [] : ['none']; else { a = a.filter(x => x !== 'none'); a = a.includes(v) ? a.filter(x => x !== v) : a.concat(v); }
+    state.multi[k] = a; syncUI(); return markDirty(); }
+  const bt = t.closest('[data-single] .big-tile');
+  if (bt) { const k = bt.closest('[data-single]').dataset.single; state.single[k] = state.single[k] === bt.dataset.v ? null : bt.dataset.v; syncUI(); return markDirty(); }
+  const ct = t.closest('.commit-tile');
+  if (ct) { const v = ct.dataset.v; state.commits = state.commits.includes(v) ? state.commits.filter(x => x !== v) : state.commits.concat(v); syncUI(); return markDirty(); }
+  const mc = t.closest('.mission-check');
+  if (mc) { const id = mc.dataset.m; if (vault.missionStatus[id] === 'done') delete vault.missionStatus[id]; else vault.missionStatus[id] = 'done'; renderMissions(); await persistQueued(); return; }
+  const ms = t.closest('.mission-step-btn');
+  if (ms) { const id = ms.dataset.step; if (state.missionSteps[id]) delete state.missionSteps[id]; else state.missionSteps[id] = true; renderMissions(); return markDirty(); }
+  if (t.closest('#btnAddStatement')) return addCustomStatement();
+  if (t.closest('#btnFinSave')) return saveFinanceMonth();
+});
+document.addEventListener('input', e => {
+  const r = e.target.closest && e.target.closest('input[type=range][data-path]'); if (!r || !unlocked()) return;
+  setPath(state, r.dataset.path, parseInt(r.value, 10)); syncUI(); markDirty();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'newStatement') { e.preventDefault(); addCustomStatement(); } });
+async function addCustomStatement() {
+  const inp = $('#newStatement'), text = (inp && inp.value || '').trim(); if (!text) return;
+  const id = 'cs_' + Date.now(); vault.customStatements.push({ id, text, createdAt: new Date().toISOString() });
+  (state.multi.statements = state.multi.statements || []).push(id);
+  renderAll(); markDirty();
+}
+async function saveFinanceMonth() {
+  const month = $('#finMonth').value, st = $('#finStatus');
+  const rentNet = parseMoney($('#finRent').value), debt = parseMoney($('#finDebt').value), equity = parseMoney($('#finEquity').value);
+  if (!/^\d{4}-\d{2}$/.test(month)) { st.textContent = 'เลือกเดือนก่อน'; return; }
+  if ([rentNet, debt, equity].some(v => Number.isNaN(v))) { st.textContent = 'ตัวเลขไม่ถูกต้อง — ใส่เป็นบาท เช่น 1500000 หรือ 1.5ล้าน'; return; }
+  if (rentNet == null && debt == null && equity == null) { st.textContent = 'ยังไม่ได้กรอกตัวเลข'; return; }
+  const prev = vault.financeLog.find(x => x.month === month) || {}, base = finNow();
+  const rec = { month, rentNet: rentNet ?? prev.rentNet ?? base.rentNet, debt: debt ?? prev.debt ?? base.debt, equity: equity ?? prev.equity ?? base.equity, savedAt: new Date().toISOString() };
+  vault.financeLog = vault.financeLog.filter(x => x.month !== month).concat(rec);
+  await persistQueued(); if (hasCloud()) syncPush();
+  renderFree(); renderNorth(); $('#finStatus').textContent = `บันทึก ${thMonth(month)} แล้ว`;
+}
+$('#saveBtn').addEventListener('click', async () => { const b = $('#saveBtn'); b.disabled = true; dirty = dirty || !byDate()[stateDate]; await commitToday(true); b.disabled = false; });
+$('#lockNowBtn').addEventListener('click', () => lockApp());
+$('#digestToggle').addEventListener('click', () => { const dg = $('#digest'); if (dg.classList.contains('show')) dg.classList.remove('show'); else { dg.innerHTML = buildDigest() || ''; dg.classList.add('show'); try { dg.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} } renderDigestToggle(); });
+
+// ---------- missions overlay
+$('#btnEditMissions').addEventListener('click', () => { if (!vault.missions) vault.missions = []; renderMissionEditList(); $('#missionAddStatus').textContent = ''; $('#missionOverlay').classList.add('show'); });
+$('#btnCloseMissionEdit').addEventListener('click', () => $('#missionOverlay').classList.remove('show'));
+$('#missionEditList').addEventListener('click', async e => {
+  const item = e.target.closest('.mission-edit-item'); if (!item) return;
+  const id = item.dataset.mid, m = vault.missions.find(x => x.id === id); if (!m) return;
+  if (e.target.closest('[data-save]')) { $$('[data-f]', item).forEach(i => { const v = i.value.trim(); if (v) m[i.dataset.f] = v; else if (i.dataset.f !== 'title') delete m[i.dataset.f]; }); if (m.due) delete m.target; await persistQueued(); renderMissions(); $('#missionAddStatus').textContent = 'บันทึกแล้ว'; }
+  if (e.target.closest('[data-del]')) { if (!confirm('ลบภารกิจนี้?')) return; vault.missions = vault.missions.filter(x => x.id !== id); delete vault.missionStatus[id]; await persistQueued(); renderMissions(); renderMissionEditList(); }
+});
+$('#btnAddMission').addEventListener('click', async () => {
+  const title = $('#newMissionTitle').value.trim(); if (!title) { $('#missionAddStatus').textContent = 'ต้องมีชื่อภารกิจ'; return; }
+  const m = { id: 'm_' + Date.now(), title }; const d = $('#newMissionDesc').value.trim(), due = $('#newMissionDue').value; if (d) m.desc = d; if (due) m.due = due;
+  vault.missions = (vault.missions || []).concat(m); await persistQueued();
+  ['#newMissionTitle', '#newMissionDesc', '#newMissionDue'].forEach(s => { $(s).value = ''; });
+  renderMissions(); renderMissionEditList(); $('#missionAddStatus').textContent = 'เพิ่มแล้ว';
+});
+
+// ---------- homework reports
+function sections() { return [['กระจก 4 ด้าน', MIRRORS.map(m => Object.assign({ t: 'mirror' }, m))], ['การบ้านเล็กๆ', [{ t: 'commits' }]], ['มุมลึก', DEEP], [C.darkTitle || 'มุมมืด', isDecoy ? [] : (C.dark || [])], ['มุมสว่าง', BRIGHT], ['บันทึกเงียบ', SILENT]].filter(([, c]) => c.length); }
+const fmtCounts = (m, dict) => { const t = topOf(m); return t.length ? t.map(([k, c]) => `${(dict || {})[k] || k}×${c}`).join(', ') : '–'; };
+function entryLines(e) {
+  const L = LBLX, out = [];
+  for (const [title, cards] of sections()) {
+    out.push(`## ${title}`);
+    cards.forEach(c => {
+      if (c.t === 'mirror') out.push(`- ${c.title}: ` + c.rows.map(r => r.t === 'toggle' ? `${L._t[r.key]} ${(L[r.key] || {})[e.mirrors && e.mirrors[r.key]] || '–'}` : `${L._t[r.path]} ${getPath(e, r.path) ?? '–'}`).join(' · '));
+      else if (c.t === 'commits') out.push(`- ${(e.commits || []).map(v => L.commits[v] || v).join(', ') || '–'}`);
+      else if (c.t === 'slider') out.push(`- ${c.title}: ${getPath(e, c.path) ?? '–'}/${c.max}`);
+      else if (c.t === 'single') out.push(`- ${c.title}: ${(L[c.key] || {})[e.single && e.single[c.key]] || '–'}`);
+      else out.push(`- ${c.title}: ${((e.multi && e.multi[c.key]) || []).map(v => (L[c.key] || {})[v] || v).join(', ') || '–'}`);
+    });
+    out.push('');
+  }
+  out.push(`## ความย้อนแย้ง: ${e.tension ?? '–'}/10`, '');
+  const st = Object.keys(e.missionSteps || {}).filter(k => e.missionSteps[k]);
+  out.push('## ภารกิจที่ขยับ', `- ${st.map(id => (getMissions().find(m => m.id === id) || {}).title || id).join(', ') || '–'}`);
+  return out;
+}
+function aggLines(ents) {
+  const L = LBLX, out = [];
+  for (const [title, cards] of sections()) {
+    out.push(`## ${title}`);
+    cards.forEach(c => {
+      if (c.t === 'mirror') c.rows.forEach(r => out.push(r.t === 'toggle' ? `- ${L._t[r.key]}: ${fmtCounts(countOne(ents, e => e.mirrors && e.mirrors[r.key]), L[r.key])}` : `- ${L._t[r.path]} เฉลี่ย: ${avgOf(ents, r.path)}`));
+      else if (c.t === 'commits') out.push(`- ${fmtCounts(countArr(ents, e => e.commits), L.commits)}`);
+      else if (c.t === 'slider') out.push(`- ${c.title} เฉลี่ย: ${avgOf(ents, c.path)}/${c.max}`);
+      else if (c.t === 'single') out.push(`- ${c.title}: ${fmtCounts(countOne(ents, e => e.single && e.single[c.key]), L[c.key])}`);
+      else out.push(`- ${c.title}: ${fmtCounts(countArr(ents, e => e.multi && e.multi[c.key]), L[c.key])}`);
+    });
+    out.push('');
+  }
+  out.push(`## ความย้อนแย้งเฉลี่ย: ${avgOf(ents, 'tension')}/10`, '');
+  return out;
+}
+function missionLines() { const ms = getMissions(); return ms.length ? ['## ภารกิจ', ...ms.map(m => `- ${m.title}: ${vault.missionStatus[m.id] === 'done' ? 'เสร็จ' : 'ยังไม่เสร็จ'}${m.due && vault.missionStatus[m.id] !== 'done' ? ` (กำหนด ${thShort(m.due)}${dayDiff(localDate(), m.due) < 0 ? ' · เลยกำหนด' : ''})` : ''}`), ''] : []; }
+function financeLines() {
+  const F = C.finance; if (!F || isDecoy) return [];
+  const f = finNow(), dt = debtFreeText(f), out = [`## อิสรภาพทางการเงิน (${f.label})`];
+  out.push(`- ค่าเช่าสุทธิ ${fmtB(f.rentNet)}/เดือน = ${(f.rentNet / f.spending).toFixed(1)}× ของรายจ่าย ${fmtB(f.spending)} (ยังไม่หักผ่อนหนี้)`);
+  out.push(`- หนี้ ${fmtM(f.debt)} (${pct(f.debt, f.asset)}% ของสินทรัพย์) · ส่วนของเจ้าของ ${fmtM(f.equity)} (${dt.eq})`);
+  (F.ladder || []).forEach(l => out.push(`- ${l.label}: ${ladderPct(l, f)}%${l.when ? ' · ' + l.when : ''}`));
+  if (dt.trend) out.push('- ' + dt.trend); if (dt.need) out.push('- ' + dt.need);
+  out.push('', '## ธงที่ยังเปิดอยู่', ...(F.flags || []).map(x => `- [${x.lv}] ${x.t}`), '');
+  return out;
+}
+function buildReport(kind) {
+  const now = new Date(), ds = thShort(localDate(now));
+  if (kind === 'daily') return [`# การบ้านรายวัน · ${ds}`, '', ...entryLines(state), '', '---', 'ช่วยอ่านแล้วบอกสั้นๆ: อะไรใน report นี้ที่คุณเห็นแต่ผมไม่เห็น?'].join('\n');
+  if (kind === 'weekly') {
+    const wk = weekEntries(), days = recentDays(7);
+    if (!wk.length) return `# การบ้านรายสัปดาห์\n\n_7 วันล่าสุดยังไม่มีบันทึก_`;
+    return [`# การบ้านรายสัปดาห์ · ${thShort(days[0])} – ${ds}`, `- วันที่บันทึก: ${wk.length}/7`, '', ...aggLines(wk), ...missionLines(), '---', 'ช่วยวิเคราะห์ 3 เรื่อง:', '1. pattern ไหนน่าห่วงที่สุดสัปดาห์นี้?', '2. อะไรกำลังไปได้ดีที่ควรกอดไว้?', '3. ก้าวเล็กที่สุด 1 ก้าวสำหรับสัปดาห์หน้า?'].join('\n');
+  }
+  const ym = localDate(now).slice(0, 7), me = vault.history.filter(h => h.date.startsWith(ym));
+  return [`# การบ้านรายเดือน · ${TH_M[now.getMonth()]} ${now.getFullYear() + 543}`, `- วันที่บันทึก: ${me.length}`, '', ...financeLines(), ...(me.length ? aggLines(me) : ['_เดือนนี้ยังไม่มีบันทึกรายวัน_', '']), ...missionLines(), '---', 'ช่วยประเมินภาพใหญ่:', '1. ผมเดินตรงทิศ หรือเริ่มเอียง — ทั้งใจและเงิน?', '2. ธงไหนควรปิดก่อนในเดือนหน้า?', '3. blind spot อะไรที่ตัวเลขชุดนี้ไม่บอก?'].join('\n');
+}
+let hwTab = 'daily';
+function renderHw() { $('#hwPreview').textContent = buildReport(hwTab); $('#hwStatus').textContent = ''; }
+$('#btnHomework').addEventListener('click', () => { hwTab = 'daily'; $$('.hw-tab').forEach(x => x.classList.toggle('active', x.dataset.tab === 'daily')); renderHw(); $('#homeworkOverlay').classList.add('show'); });
+$$('.hw-tab').forEach(b => b.addEventListener('click', () => { hwTab = b.dataset.tab; $$('.hw-tab').forEach(x => x.classList.toggle('active', x === b)); renderHw(); }));
+$('#btnHwClose').addEventListener('click', () => $('#homeworkOverlay').classList.remove('show'));
+$('#btnHwCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#hwPreview').textContent); $('#hwStatus').textContent = 'คัดลอกแล้ว · วางในแชทกับ Claude ได้เลย'; } catch (e) { $('#hwStatus').textContent = 'คัดลอกอัตโนมัติไม่ได้ — กดค้างที่ข้อความแล้ว copy เอง'; } });
+$$('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o && o.id !== 'pinOverlay') o.classList.remove('show'); }));
+
+// ---------- settings
+function refreshSettings() {
+  const on = hasCloud(); $('#syncBlockOff').hidden = on; $('#syncBlockOn').hidden = !on;
+  if (on) { $('#showBinId').textContent = vault.cloud.binId; $('#showLastSync').textContent = vault.cloud.lastSyncAt ? new Date(vault.cloud.lastSyncAt).toLocaleString('th-TH') : '–'; }
+  const p = vault.pack;
+  $('#packStatus').textContent = p ? `นำเข้าแล้ว ${new Date(p.importedAt).toLocaleString('th-TH')} · คำถาม ${(p.questions || []).length} · การ์ดมุมมืด ${(p.dark || []).length} · ภารกิจ ${(p.missions || []).length}${p.finance ? ` · การเงิน (งบ ${p.finance.asOfLabel})` : ''}` : 'ยังไม่ได้นำเข้า — ตอนนี้แอปแสดงเนื้อหาทั่วไป';
+  $('#btnRemovePack').hidden = !p;
+  const bs = bioSupported(), hb = hasBio();
+  $('#bioStatus').textContent = !bs ? 'อุปกรณ์นี้ไม่รองรับ Face ID / Touch ID ผ่าน browser' : hb ? 'Biometric เปิดอยู่บนเครื่องนี้' : 'ยังไม่ได้เปิด biometric';
+  $('#btnSetupBio').hidden = !bs || hb; $('#btnRemoveBio').hidden = !hb;
+  const hd = !!lsGet(LS.decoy); $('#decoyStatus').textContent = hd ? 'Decoy PIN พร้อมใช้บนเครื่องนี้' : 'ยังไม่มี Decoy PIN';
+  $('#btnSetupDecoy').hidden = hd; $('#btnRemoveDecoy').hidden = !hd;
+}
+$('#btnSettings').addEventListener('click', () => { refreshSettings(); ['#packOpStatus', '#setupStatus', '#syncOpStatus', '#backupStatus', '#setupOpStatus'].forEach(s => { $(s).textContent = ''; }); $('#settingsOverlay').classList.add('show'); });
+$('#btnCloseSettings').addEventListener('click', () => $('#settingsOverlay').classList.remove('show'));
+
+async function importPack(p) {
+  if (!p || p.kind !== 'morning-pack') throw new Error('ไฟล์นี้ไม่ใช่ Personal Pack');
+  p = clone(p); p.importedAt = new Date().toISOString();
+  vault.pack = p;
+  const cur = vault.missions || [], ids = new Set(cur.map(m => m.id));
+  (p.missions || []).forEach(m => { if (!ids.has(m.id)) cur.push(clone(m)); else { const c = cur.find(x => x.id === m.id); if (!c.due && m.due) c.due = m.due; } });
+  vault.missions = cur;
+  await persistQueued();
+  C = buildContent(vault.pack); renderAll();
+  if (hasCloud()) syncPush();
+  return p;
+}
+$('#btnImportPack').addEventListener('click', () => $('#filePack').click());
+$('#filePack').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return; const st = $('#packOpStatus');
+  try { await importPack(JSON.parse(await f.text())); refreshSettings(); st.textContent = 'นำเข้าแล้ว · ลบไฟล์ morning-pack.json ออกจากเครื่องได้ (ข้อมูลอยู่ในตู้เข้ารหัสแล้ว)'; }
+  catch (err) { st.textContent = 'นำเข้าไม่สำเร็จ: ' + (err.message || 'ไฟล์เสีย'); }
+});
+$('#btnRemovePack').addEventListener('click', async () => { if (!confirm('ถอด Personal Pack? (ภารกิจและบันทึกยังอยู่)')) return; vault.pack = null; await persistQueued(); C = buildContent(null); renderAll(); refreshSettings(); if (hasCloud()) syncPush(); });
+
+$('#btnSetupConnect').addEventListener('click', async () => {
+  const key = $('#setupKey').value.trim(), st = $('#setupStatus'); if (!key) { st.textContent = 'กรอก Master Key'; return; }
+  st.innerHTML = '<span class="spin"></span>กำลังสร้าง bin...';
+  try { const bin = await jbCreate(key, { cipher: await encryptObj(vault, PIN), updatedAt: new Date().toISOString() }); vault.cloud = { key, binId: bin, lastSyncAt: new Date().toISOString() }; await persistQueued(); setSyncDot('on'); refreshSettings(); $('#syncOpStatus').textContent = 'เชื่อมแล้ว · จด Bin ID ไว้สำหรับเครื่องอื่น'; }
+  catch (e) { st.textContent = 'ไม่สำเร็จ · เช็ค Master Key / อินเทอร์เน็ต'; }
+});
+$('#btnCopyBin').addEventListener('click', async () => { try { await navigator.clipboard.writeText(vault.cloud.binId); $('#syncOpStatus').textContent = 'คัดลอก Bin ID แล้ว'; } catch (e) {} });
+$('#btnCopyKey').addEventListener('click', async () => { try { await navigator.clipboard.writeText(vault.cloud.key); $('#syncOpStatus').textContent = 'คัดลอก Master Key แล้ว'; } catch (e) {} });
+$('#btnSyncNow').addEventListener('click', async () => { const s = $('#syncOpStatus'); s.innerHTML = '<span class="spin"></span>กำลัง sync...'; if (dirty) await commitToday(false); const a = await syncPull(), b = a && await syncPush(); s.textContent = a && b ? 'Sync สำเร็จ' : 'Sync ไม่สำเร็จ · เช็คอินเทอร์เน็ต'; if (a) { C = buildContent(vault.pack); hydrateToday(); renderAll(); } refreshSettings(); });
+$('#btnDisconnect').addEventListener('click', async () => { if (!confirm('ถอด cloud? (ข้อมูลในเครื่องยังอยู่ · bin ใน jsonbin.io ลบเองได้)')) return; vault.cloud = null; await persistQueued(); setSyncDot('off'); refreshSettings(); });
+
+$('#btnExportBackup').addEventListener('click', async () => {
+  const st = $('#backupStatus'); await commitToday(false);
+  const raw = lsGet(LS.data); if (!raw) { st.textContent = 'ยังไม่มีข้อมูล'; return; }
+  const blob = new Blob([JSON.stringify({ kind: 'morning-backup', v: 4, exportedAt: new Date().toISOString(), bundle: JSON.parse(raw) })], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `morning-backup-${localDate().replace(/-/g, '')}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  st.textContent = 'ดาวน์โหลดแล้ว · เปิดได้ด้วย PIN ปัจจุบันเท่านั้น';
+});
+
+// ---------- decoy setup
+let poMode = null, poBuf = '', poFirst = '';
+const poDots = () => $$('#pinOverlayDots .dot').forEach((d, i) => d.classList.toggle('filled', i < poBuf.length));
+const poStatus = (m, err) => { const el = $('#pinOverlayStatus'); el.textContent = m; el.style.color = err ? 'var(--red)' : ''; };
+function openPinOverlay(mode, title, sub) { poMode = mode; poBuf = ''; poFirst = ''; $('#pinOverlayTitle').textContent = title; $('#pinOverlaySub').textContent = sub; poDots(); poStatus(''); $('#pinOverlay').classList.add('show'); }
+const closePinOverlay = () => { $('#pinOverlay').classList.remove('show'); poMode = null; poBuf = ''; poFirst = ''; };
+$('#pinOverlayNumpad').addEventListener('click', async e => {
+  const b = e.target.closest('.np-btn'); if (!b) return;
+  if (b.dataset.a === 'po-clear') { poBuf = ''; poDots(); poStatus(''); return; }
+  if (b.dataset.a === 'po-cancel') return closePinOverlay();
+  if (poBuf.length >= 4) return; poBuf += b.dataset.n; poDots(); if (poBuf.length < 4) return;
+  const code = poBuf;
+  if (poMode === 'decoy1') { if (code === PIN) { shake('#pinOverlayDots'); poStatus('ห้ามตรงกับ PIN จริง', true); setTimeout(() => { poBuf = ''; poDots(); }, 400); return; } poFirst = code; poMode = 'decoy2'; $('#pinOverlayTitle').textContent = 'ยืนยัน Decoy PIN'; setTimeout(() => { poBuf = ''; poDots(); }, 200); return; }
+  if (poMode === 'decoy2') {
+    if (code !== poFirst) { shake('#pinOverlayDots'); poStatus('ไม่ตรงกัน · เริ่มใหม่', true); poMode = 'decoy1'; $('#pinOverlayTitle').textContent = 'ตั้ง Decoy PIN'; setTimeout(() => { poBuf = ''; poDots(); }, 400); return; }
+    poStatus('กำลังสร้าง...');
+    const d = normalizeVault({ createdAt: new Date().toISOString() }); d.missions = [];
+    lsSet(LS.decoy, JSON.stringify(await encryptObj(d, code)));
+    poStatus('เรียบร้อย'); setTimeout(() => { closePinOverlay(); refreshSettings(); }, 500);
+  }
+});
+$('#btnSetupDecoy').addEventListener('click', () => openPinOverlay('decoy1', 'ตั้ง Decoy PIN', '4 หลัก · ห้ามตรงกับ PIN จริง'));
+$('#btnRemoveDecoy').addEventListener('click', () => { if (confirm('ลบ Decoy PIN?')) { lsDel(LS.decoy); refreshSettings(); } });
+
+// ---------- biometric (WebAuthn PRF → key that wraps the PIN)
+const bioSupported = () => !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+const hasBio = () => !!(lsGet(LS.bioCred) && lsGet(LS.bioPin));
+$('#btnSetupBio').addEventListener('click', async () => {
+  const st = $('#setupOpStatus'); st.innerHTML = '<span class="spin"></span>กำลังตั้งค่า...';
+  try {
+    const salt = crypto.getRandomValues(new Uint8Array(32));
+    const cred = await navigator.credentials.create({ publicKey: { rp: { name: 'Morning' }, user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'morning', displayName: 'Morning' }, challenge: crypto.getRandomValues(new Uint8Array(32)), pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }], authenticatorSelection: { userVerification: 'required', residentKey: 'preferred' }, timeout: 60000, extensions: { prf: { eval: { first: salt } } } } });
+    let out = cred.getClientExtensionResults().prf;
+    if (!out || !out.results || !out.results.first) {
+      // some platforms only return PRF on get(): try once
+      const as = await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), allowCredentials: [{ type: 'public-key', id: cred.rawId }], userVerification: 'required', extensions: { prf: { eval: { first: salt } } } } });
+      out = as.getClientExtensionResults().prf;
+    }
+    if (!out || !out.results || !out.results.first) throw new Error('อุปกรณ์นี้ยังไม่รองรับ (PRF) — ใช้ PIN ต่อไป');
+    const key = await crypto.subtle.importKey('raw', new Uint8Array(out.results.first), { name: 'AES-GCM' }, false, ['encrypt']);
+    const iv = crypto.getRandomValues(new Uint8Array(12)), ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(PIN));
+    lsSet(LS.bioCred, u8ToB64(new Uint8Array(cred.rawId))); lsSet(LS.bioSalt, u8ToB64(salt)); lsSet(LS.bioPin, JSON.stringify({ iv: u8ToB64(iv), ct: u8ToB64(new Uint8Array(ct)) }));
+    st.textContent = 'เปิดแล้ว · ครั้งหน้าปลดล็อกด้วย Face ID / Touch ID'; refreshSettings();
+  } catch (e) { st.textContent = 'ตั้งค่าไม่สำเร็จ: ' + (e.message || e.name || 'unknown'); }
+});
+$('#btnRemoveBio').addEventListener('click', () => { if (confirm('ปิด biometric บนเครื่องนี้?')) { lsDel(LS.bioCred); lsDel(LS.bioSalt); lsDel(LS.bioPin); refreshSettings(); } });
+async function biometricUnlock(auto) {
+  if (!hasBio() || gateMode !== 'verify' || unlocked()) return;
+  try {
+    const as = await navigator.credentials.get({ publicKey: { challenge: crypto.getRandomValues(new Uint8Array(32)), allowCredentials: [{ type: 'public-key', id: b64ToU8(lsGet(LS.bioCred)) }], userVerification: 'required', timeout: 60000, extensions: { prf: { eval: { first: b64ToU8(lsGet(LS.bioSalt)) } } } } });
+    const out = as.getClientExtensionResults().prf; if (!out || !out.results || !out.results.first) throw new Error('prf');
+    const key = await crypto.subtle.importKey('raw', new Uint8Array(out.results.first), { name: 'AES-GCM' }, false, ['decrypt']);
+    const s = JSON.parse(lsGet(LS.bioPin)), pin = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToU8(s.iv) }, key, b64ToU8(s.ct)));
+    const v = await loadBundle(LS.data, pin); if (!v) throw new Error('pin');
+    PIN = pin; vault = v; isDecoy = false; return unlockApp();
+  } catch (e) { if (!auto) { pinStatus('ใช้ biometric ไม่ได้ · ใส่ PIN แทน', 'err'); setTimeout(() => pinStatus(''), 2500); } }
+}
+$('#btnBioUnlock').addEventListener('click', () => biometricUnlock(false));
+
+// ---------- idle lock + background privacy
+let lastActive = Date.now(), idleTimer = null; const IDLE_MS = 10 * 60 * 1000;
+function bump() { if (!unlocked()) return; lastActive = Date.now(); clearTimeout(idleTimer); idleTimer = setTimeout(() => lockApp(), IDLE_MS); }
+['click', 'keydown', 'touchstart', 'scroll', 'input'].forEach(ev => document.addEventListener(ev, bump, { passive: true }));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { document.body.classList.add('veil'); if (unlocked() && dirty) commitToday(false); return; }
+  document.body.classList.remove('veil');
+  if (!unlocked()) return;
+  if (Date.now() - lastActive > IDLE_MS) return lockApp();
+  if (stateDate !== localDate()) commitToday(false).then(() => { hydrateToday(); renderAll(); });
+});
+window.addEventListener('pagehide', () => { if (unlocked() && dirty) commitToday(false); });
+
+// ---------- boot
+breathCycle();
+bootGate();
+</script>
+</body>
+</html>
